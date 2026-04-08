@@ -1,2 +1,0 @@
-# -CSP1123-MINI-IT-PROJECT
-Nexus
