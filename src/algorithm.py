@@ -36,3 +36,40 @@ def calculate_time_decay(current_score, last_studied_date_str):
 
     # If studied within the last 7 days, memory retention is optimal. No penalty.
     return current_score, 0.0
+
+
+
+# ==========================================
+# LOCAL TESTING BLOCK
+# ==========================================
+if __name__ == "__main__":
+    from datetime import datetime, timedelta
+    
+    # Fake Dates for Testing
+    today = datetime.now()
+    yesterday = (today - timedelta(days=1)).strftime("%Y-%m-%d")
+    eight_days_ago = (today - timedelta(days=8)).strftime("%Y-%m-%d")
+    three_months_ago = (today - timedelta(days=90)).strftime("%Y-%m-%d")
+    
+    # Test Case 1: Studied recently (Less than 7 days)
+    print("\nTest 1: Studied Yesterday (Expect: No penalty)")
+    score, penalty = calculate_time_decay(85.0, yesterday)
+    print(f"Result -> New Score: {score} | Penalty Applied: {penalty}%")
+
+    # Test Case 2: Just over a week (8 days)
+    print("\nTest 2: Studied 8 days ago (Expect: 5% penalty)")
+    score, penalty = calculate_time_decay(85.0, eight_days_ago)
+    print(f"Result -> New Score: {score} | Penalty Applied: {penalty}%")
+
+    # Test Case 3: Edge Case - Extreme Decay (Should hit the 0.0 floor, not go negative)
+    print("\nTest 3: Studied 90 days ago with low score (Expect: Score hits 0.0, no negatives)")
+    score, penalty = calculate_time_decay(30.0, three_months_ago)
+    print(f"Result -> New Score: {score} | Penalty Applied: {penalty}%")
+
+    # Test Case 4: Edge Case - Brand new topic
+    print("\nTest 4: Never studied (Expect: 0 penalty)")
+    score, penalty = calculate_time_decay(0.0, None)
+    print(f"Result -> New Score: {score} | Penalty Applied: {penalty}%")
+    
+
+#===========================================
