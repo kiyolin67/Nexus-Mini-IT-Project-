@@ -29,8 +29,7 @@ Unlike standard to-do lists, Nexus utilizes a custom **Mastery Score Algorithm**
 Nexus/
 ├── .gitignore
 ├── README.md
-├── docs/
-│   └── Nexus_Final_Proposal.pdf
+|
 └── src/
     ├── main.py          
     ├── database.py      
