@@ -70,6 +70,9 @@ if __name__ == "__main__":
     print("\nTest 4: Never studied (Expect: 0 penalty)")
     score, penalty = calculate_time_decay(0.0, None)
     print(f"Result -> New Score: {score} | Penalty Applied: {penalty}%")
+
+    # Test 5
+    print("\nTest 5: Studied 15 days ago (Expect: 10% penalty)")
     
 
 #===========================================
