@@ -1,4 +1,7 @@
 from datetime import datetime
+import google.generativeai as genai
+import os
+from dotenv import load_dotenv
 
 def calculate_time_decay(current_score, last_studied_date_str):
     """
@@ -36,6 +39,43 @@ def calculate_time_decay(current_score, last_studied_date_str):
 
     # If studied within the last 7 days, memory retention is optimal. No penalty.
     return current_score, 0.0
+
+
+
+###
+# INSIGHT LOGIC
+###
+
+def get_ai_study_advice(topic_name, duration_mins, confidence_level):
+    """
+    ALGORITHM: AI-Generated Study Advice
+    Takes the student's topic, study duration, and confidence level to generate personalized study advice using Google Gemini.
+    """
+    try:
+        # 1. Load secret API key from .env file
+        load_dotenv()
+        api_key = os.getenv("GEMINI_API_KEY")
+        genai.configure(api_key=api_key)
+        # 2. Model 
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        # 3. Construct Prompt with clear instructions and context
+        prompt = f"""
+        You are an expert study advisor for foundation university students. 
+        A student has just studied '{topic_name}' for {duration_mins} minutes and rates their confidence level as {confidence_level}/5.
+
+        Provide exactly 2-3 short sentences of actionable, scientific study advice based on this data.
+        If they studied over 90 minutes, warn them about cognitive burnout.
+        Do not use formatting like bolding or bullet points.
+        """
+
+        # 4. Call API and return clean and clear text
+        response = model.generate_content(prompt)
+        return response.text.strip()
+    
+    except Exception as e:
+        # Ensures if user has no Wifi, the app wont crash
+        print(f"API Error: {e}")
+        return "Insights offline. Remember to use Spaced Repetition and take a 15-minute break every hour to maximize retention!"
 
 
 
