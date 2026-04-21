@@ -11,7 +11,7 @@ cursor.execute ("""
                 )
 """)
 
-X = input("What subject are you studying right now?")
+X = input("What subject are you studying right now?").upper()
 Y = input("How long did you study?")
 Z = input("What is your weakness level in this test?")
 
