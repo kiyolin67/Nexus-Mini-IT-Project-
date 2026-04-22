@@ -1,5 +1,5 @@
 from datetime import datetime
-import google.generativeai as genai
+from google import genai
 import os
 from dotenv import load_dotenv
 
@@ -52,13 +52,14 @@ def get_ai_study_advice(topic_name, duration_mins, confidence_level):
     Takes the student's topic, study duration, and confidence level to generate personalized study advice using Google Gemini.
     """
     try:
-        # 1. Load secret API key from .env file
+        # Load API key from .env file
         load_dotenv()
         api_key = os.getenv("GEMINI_API_KEY")
-        genai.configure(api_key=api_key)
-        # 2. Model 
-        model = genai.GenerativeModel('gemini-1.5-flash')
-        # 3. Construct Prompt with clear instructions and context
+
+         # CLient Initialization 
+        client = genai.Client(api_key=api_key)
+        
+        # Prompt
         prompt = f"""
         You are an expert study advisor for foundation university students. 
         A student has just studied '{topic_name}' for {duration_mins} minutes and rates their confidence level as {confidence_level}/5.
@@ -68,8 +69,11 @@ def get_ai_study_advice(topic_name, duration_mins, confidence_level):
         Do not use formatting like bolding or bullet points.
         """
 
-        # 4. Call API and return clean and clear text
-        response = model.generate_content(prompt)
+        # Call API and return clean and clear text
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=prompt
+            )
         return response.text.strip()
     
     except Exception as e:
@@ -111,8 +115,11 @@ if __name__ == "__main__":
     score, penalty = calculate_time_decay(0.0, None)
     print(f"Result -> New Score: {score} | Penalty Applied: {penalty}%")
 
-    # Test 5
-    print("\nTest 5: Studied 15 days ago (Expect: 10% penalty)")
+    # INSIGHT LOGIC TEST
+
+    print("Nexus AI Loading Test Insight...")
+    advice = get_ai_study_advice("Calculus", 120, 3)
+    print(f"AI Advice: {advice}")
     
 
 #===========================================
