@@ -3,9 +3,23 @@ import customtkinter as ctk
 ctk.set_appearance_mode("light")#background colour
 ctk.set_default_color_theme("blue")
 
+password_visible = False
+
 app = ctk.CTk()
 app.geometry("400x300")
 app.title("Login")
+
+def toggle_password():
+    global password_visible
+
+    if password_visible:
+        pass_entry.configure(show="*")
+        toggle_button.configure(text="Show Password")
+        password_visible = False
+    else:
+        pass_entry.configure(show="")
+        toggle_button.configure(text="Hide Password")
+        password_visible = True
 
 def handle_login():
     username = user_entry.get()
@@ -28,11 +42,16 @@ user_entry.pack(pady=10)
 pass_entry = ctk.CTkEntry(app, placeholder_text= "Password", show="*")
 pass_entry.pack(pady=10)
 
+toggle_button = ctk.CTkButton(app, text="Show Password", command=toggle_password)
+toggle_button.pack(pady=5)
+
 login_button = ctk.CTkButton(app, text="Login", command=handle_login)
 login_button.pack(pady=10)
 
 status_label = ctk.CTkLabel(app, text="")
 status_label.pack()
+
+
 
 app.mainloop()
 
