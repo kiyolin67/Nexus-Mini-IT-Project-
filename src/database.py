@@ -3,7 +3,7 @@ conn = sqlite3.connect ("tracker2.db")
 cursor = conn.cursor ()
 
 cursor.execute ("""
-                CREATE TABLE IF NOT EXISTS tracker1(
+                CREATE TABLE IF NOT EXISTS tracker2(
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 topic TEXT,
                 duration INTEGER,
