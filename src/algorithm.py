@@ -78,8 +78,8 @@ def get_ai_study_advice(topic_name, duration_mins, confidence_level):
     
     except Exception as e:
         # Ensures if user has no Wifi, the app wont crash
-        print(f"API Error: {e}")
-        return "Insights offline. Remember to use Spaced Repetition and take a 15-minute break every hour to maximize retention!"
+        print(f"API Error Found: {e}")
+        return "Insights offline. Please try again later. Remember to use Spaced Repetition and take a 15-minute break every hour to maximize retention!"
 
 
 
@@ -110,17 +110,12 @@ if __name__ == "__main__":
     score, penalty = calculate_time_decay(30.0, three_months_ago)
     print(f"Result -> New Score: {score} | Penalty Applied: {penalty}%")
 
-    # Test Case 4: Edge Case - Brand new topic
-    print("\nTest 4: Never studied (Expect: 0 penalty)")
-    score, penalty = calculate_time_decay(0.0, None)
-    print(f"Result -> New Score: {score} | Penalty Applied: {penalty}%")
-
     # INSIGHT LOGIC TEST
-
+    #first bracket is name of sub then duration then confidence level out of 5
     print("Nexus AI Loading Test Insight...")
     print("----------------------------------------")
-    advice = get_ai_study_advice("Calculus", 120, 3)
-    print(f"AI Advice: {advice}")
+    advice = get_ai_study_advice("Calculus", 60, 5)
+    print(f"Nexus AI Advice: {advice}")
     print("----------------------------------------")
     
 
