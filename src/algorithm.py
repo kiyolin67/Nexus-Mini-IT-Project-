@@ -118,8 +118,10 @@ if __name__ == "__main__":
     # INSIGHT LOGIC TEST
 
     print("Nexus AI Loading Test Insight...")
+    print("----------------------------------------")
     advice = get_ai_study_advice("Calculus", 120, 3)
     print(f"AI Advice: {advice}")
+    print("----------------------------------------")
     
 
 #===========================================
