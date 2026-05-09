@@ -1,15 +1,84 @@
-import sqlite3
-conn = sqlite3.connect ("tracker2.db")
+import mysql.connector
+conn = mysql.connector.connect (
+    host = "localhost",
+    user = "root",
+    password = "12345qwert@",
+    database = "tracker_db" 
+)
+
+ADMIN_ID = "ADMIN123"
+
 cursor = conn.cursor ()
+
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS users (
+    user_id VARCHAR(50) PRIMARY KEY
+)
+""")
 
 cursor.execute ("""
                 CREATE TABLE IF NOT EXISTS tracker2(
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                topic TEXT,
+                id INTEGER PRIMARY KEY AUTO_INCREMENT,
+                topic VARCHAR(255),
                 duration INTEGER,
                 weakness_level INTEGER
                 )
 """)
+
+user_id = input("Enter your User ID: ").upper()
+
+if user_id == ADMIN_ID:
+            print("\n" + "="*30 + "\nADMIN MANAGEMENT CONSOLE\n" + "="*30)
+            while True:
+                print("\n1. View All Study Records\n2. View All Users\n3. Edit User ID/Password\n4. Delete a Record\n5. Exit")
+                choice = input("Select an option: ")
+
+                if choice == "1":
+                    cursor.execute("SELECT * FROM tracker2")
+                    for row in cursor.fetchall(): print(row)
+                
+                elif choice == "2":
+                    cursor.execute("SELECT * FROM users")
+                    for row in cursor.fetchall(): print(row)
+
+                elif choice == "3":
+                    old_id = input("Enter User ID to edit: ")
+                    new_id = input("Enter new User ID (or press enter to keep): ") or old_id
+                    new_pass = input("Enter new Password: ")
+                    cursor.execute("UPDATE users SET user_id = %s, password = %s WHERE user_id = %s", (new_id, new_pass, old_id))
+                    conn.commit()
+                    print("User updated.")
+
+                elif choice == "4":
+                    del_id = input("Enter Record ID to delete from tracker: ")
+                    cursor.execute("DELETE FROM tracker2 WHERE id = %s", (del_id,))
+                    conn.commit()
+                    print("Record deleted.")
+
+                elif choice == "5":
+                    break
+
+else:
+    cursor.execute("""
+    SELECT * FROM users
+    WHERE user_id = %s
+    """, (user_id,))
+
+    existing_user = cursor.fetchone()
+
+    if not existing_user:
+
+        cursor.execute("""
+        INSERT INTO users (user_id)
+        VALUES (%s)
+        """, (user_id,))
+
+        conn.commit()
+
+        print("New user created successfully!")
+
+    else:
+        print("Welcome back!")
 
 X = input("What subject are you studying right now?").upper()
 Y = input("Timer to complete the quiz")
@@ -17,17 +86,17 @@ Z = input("What is your weakness level in this test?")
 
 cursor.execute ("""
 INSERT INTO tracker2 (topic, duration, weakness_level)
-VALUES (?, ?, ?)
+VALUES (%s, %s, %s)
 """,(X, Y, Z)
 )
 
 cursor.execute ("""
-SELECT * FROM tracker2 WHERE topic = ?
+SELECT * FROM tracker2 WHERE topic = %s
                 """, (X,))
 print ("Record for this subject is: ",cursor.fetchall())
 
 cursor.execute ("""
-SELECT COUNT (*) FROM tracker2 WHERE topic = ?
+SELECT COUNT (*) FROM tracker2 WHERE topic = %s
                 """, (X,))
 COUNT = cursor.fetchone()[0]
 print (f"You have studied {X} {COUNT} times.")
@@ -46,8 +115,8 @@ if update_choice == "yes":
 
     cursor.execute("""
     UPDATE tracker2
-    SET weakness_level = ?
-    WHERE id = ?
+    SET weakness_level = %s
+    WHERE id = %s
     """, (new_weakness, update_id))
 
     conn.commit()
@@ -65,7 +134,7 @@ if delete_choice == "yes":
 
     cursor.execute("""
     DELETE FROM tracker2
-    WHERE id = ?
+    WHERE id = %s
     """, (delete_id,))
 
     conn.commit()
