@@ -12,13 +12,15 @@ cursor = conn.cursor ()
 
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS users (
-    user_id VARCHAR(50) PRIMARY KEY
+    user_id VARCHAR(50) PRIMARY KEY,
+    password VARCHAR(255)
 )
 """)
 
 cursor.execute ("""
-                CREATE TABLE IF NOT EXISTS tracker2(
+                CREATE TABLE IF NOT EXISTS tracker3(
                 id INTEGER PRIMARY KEY AUTO_INCREMENT,
+                user_id VARCHAR(50),
                 topic VARCHAR(255),
                 duration INTEGER,
                 weakness_level INTEGER
@@ -80,23 +82,23 @@ else:
     else:
         print("Welcome back!")
 
-X = input("What subject are you studying right now?").upper()
-Y = input("Timer to complete the quiz")
-Z = input("What is your weakness level in this test?")
+X = input("What subject are you studying right now?:").upper()
+Y = int(input("Timer to complete the quiz( Only type in numbers for hours)?:"))
+Z = int(input("What is your weakness level in this test?:"))
 
 cursor.execute ("""
-INSERT INTO tracker2 (topic, duration, weakness_level)
-VALUES (%s, %s, %s)
-""",(X, Y, Z)
+INSERT INTO tracker3 (user_id, topic, duration, weakness_level)
+VALUES (%s, %s, %s, %s)
+""",(user_id, X, Y, Z)
 )
 
 cursor.execute ("""
-SELECT * FROM tracker2 WHERE topic = %s
+SELECT * FROM tracker3 WHERE topic = %s
                 """, (X,))
 print ("Record for this subject is: ",cursor.fetchall())
 
 cursor.execute ("""
-SELECT COUNT (*) FROM tracker2 WHERE topic = %s
+SELECT COUNT(*) FROM tracker3 WHERE topic = %s
                 """, (X,))
 COUNT = cursor.fetchone()[0]
 print (f"You have studied {X} {COUNT} times.")
@@ -114,7 +116,7 @@ if update_choice == "yes":
     new_weakness = int(input("Enter your updated weakness level: "))
 
     cursor.execute("""
-    UPDATE tracker2
+    UPDATE tracker3
     SET weakness_level = %s
     WHERE id = %s
     """, (new_weakness, update_id))
@@ -133,7 +135,7 @@ if delete_choice == "yes":
     delete_id = int(input("\nEnter the ID of the record you want to delete: "))
 
     cursor.execute("""
-    DELETE FROM tracker2
+    DELETE FROM tracker3
     WHERE id = %s
     """, (delete_id,))
 
