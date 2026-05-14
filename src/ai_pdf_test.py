@@ -11,12 +11,10 @@ def generate_quiz():
     """
     print("Nexus AI Loading Test Quiz Generation...")
 
-    # UI
     root = tk.Tk()
     root.withdraw()
     root.attributes("-topmost", True)
     
-    # FIX: Added the missing comma and corrected the filetypes format
     file_path = filedialog.askopenfilename(
         title="Select PDF",
         filetypes=[("PDF Files", "*.pdf")]
@@ -56,7 +54,6 @@ def generate_quiz():
             print("\nNexus AI Quiz Generated:\n")
             print(response.text)
             
-            #  Return exits the function cleanly on success.
             return 
 
         except Exception as e:
@@ -64,6 +61,7 @@ def generate_quiz():
 
             # 503 - google sucks
             # 429 - too many requests from user probably cuz free tier
+            # past 7pm is bad timing to use the API
             if "503" in error_msg or "UNAVAILABLE"  or "429" or "TOO MANY" in error_msg:
                 wait_time = 2 ** attempt # power of 2 for exponential pattern
                 print(f"Nexus AI is currently overloaded (Attempt {attempt + 1}/{max_retries}). Retrying in {wait_time} seconds...")
