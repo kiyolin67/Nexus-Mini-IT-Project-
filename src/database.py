@@ -1,35 +1,64 @@
 import mysql.connector
-conn = mysql.connector.connect (
-    host = "localhost",
-    user = "root",
-    password = "12345qwert@",
-    database = "tracker_db" 
+
+conn = mysql.connector.connect(
+    host="localhost",
+    user="root",
+    password="12345qwert@",
+    database="tracker_db"
 )
 
 ADMIN_ID = "ADMIN123"
+ADMIN_PASSWORD = "00000"
 
-cursor = conn.cursor ()
+cursor = conn.cursor()
 
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS users (
-    user_id VARCHAR(50) PRIMARY KEY,
-    password VARCHAR(255)
+    user_id VARCHAR(50) PRIMARY KEY
 )
 """)
 
-cursor.execute ("""
-                CREATE TABLE IF NOT EXISTS tracker3(
-                id INTEGER PRIMARY KEY AUTO_INCREMENT,
-                user_id VARCHAR(50),
-                topic VARCHAR(255),
-                duration INTEGER,
-                weakness_level INTEGER
-                )
+try:
+    cursor.execute("""
+    ALTER TABLE users
+    ADD COLUMN password VARCHAR(255)
+    """)
+except:
+    pass
+
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS tracker3(
+    id INTEGER PRIMARY KEY AUTO_INCREMENT,
+    user_id VARCHAR(50),
+    topic VARCHAR(255),
+    duration INTEGER,
+    weakness_level INTEGER
+)
 """)
 
-user_id = input("Enter your User ID: ").upper()
+def save_user(user_id, password):
 
-if user_id == ADMIN_ID:
+    cursor.execute("""
+    SELECT * FROM users
+    WHERE user_id = %s AND password = %s
+    """, (user_id, password))
+
+    existing_user = cursor.fetchone()
+
+    if not existing_user:
+
+        cursor.execute("""
+        INSERT INTO users (user_id, password)
+        VALUES (%s, %s)
+        """, (user_id, password))
+
+        conn.commit()
+
+def start_system(user_id, password):
+
+    save_user(user_id, password)
+
+    if user_id == ADMIN_ID and password == ADMIN_PASSWORD:
             print("\n" + "="*30 + "\nADMIN MANAGEMENT CONSOLE\n" + "="*30)
             while True:
                 print("\n1. View All Study Records\n2. View All Users\n3. Edit User ID/Password\n4. Delete a Record\n5. Exit")
@@ -60,92 +89,83 @@ if user_id == ADMIN_ID:
                 elif choice == "5":
                     break
 
-else:
-    cursor.execute("""
-    SELECT * FROM users
-    WHERE user_id = %s
-    """, (user_id,))
+    else:
 
-    existing_user = cursor.fetchone()
-
-    if not existing_user:
+        X = input("What subject are you studying right now?: ").upper()
+        Y = int(input("Timer (hours only): "))
+        Z = int(input("Weakness level: "))
 
         cursor.execute("""
-        INSERT INTO users (user_id)
-        VALUES (%s)
-        """, (user_id,))
+        INSERT INTO tracker3 (user_id, topic, duration, weakness_level)
+        VALUES (%s, %s, %s, %s)
+        """, (user_id, X, Y, Z))
 
         conn.commit()
 
-        print("New user created successfully!")
+        cursor.execute("""
+        SELECT * FROM tracker3
+        WHERE topic = %s
+        """, (X,))
 
-    else:
-        print("Welcome back!")
+        print("\nRecord for this subject:")
+        for row in cursor.fetchall():
+            print(row)
 
-X = input("What subject are you studying right now?:").upper()
-Y = int(input("Timer to complete the quiz( Only type in numbers for hours)?:"))
-Z = int(input("What is your weakness level in this test?:"))
+        cursor.execute("""
+        SELECT COUNT(*) FROM tracker3
+        WHERE topic = %s
+        """, (X,))
 
-cursor.execute ("""
-INSERT INTO tracker3 (user_id, topic, duration, weakness_level)
-VALUES (%s, %s, %s, %s)
-""",(user_id, X, Y, Z)
-)
+        count = cursor.fetchone()[0]
+        print(f"\nYou have studied {X} {count} times.")
 
-cursor.execute ("""
-SELECT * FROM tracker3 WHERE topic = %s
-                """, (X,))
-print ("Record for this subject is: ",cursor.fetchall())
+        update_choice = input("\nUpdate weakness? (yes/no): ").lower()
 
-cursor.execute ("""
-SELECT COUNT(*) FROM tracker3 WHERE topic = %s
-                """, (X,))
-COUNT = cursor.fetchone()[0]
-print (f"You have studied {X} {COUNT} times.")
+        if update_choice == "yes":
 
-update_choice = input("\nDo you want to update your weakness level? (yes/no): ").lower()
+            cursor.execute("SELECT * FROM tracker3")
+            for row in cursor.fetchall():
+                print(row)
 
-if update_choice == "yes":
-    # Show all records so user can choose ID
-    cursor.execute("SELECT * FROM tracker2")
-    print("\nAll Records:")
-    for row in cursor.fetchall():
-        print(row)
+            update_id = int(input("Enter ID: "))
+            new_weakness = int(input("New weakness level: "))
 
-    update_id = int(input("\nEnter the ID to update weakness level: "))
-    new_weakness = int(input("Enter your updated weakness level: "))
+            cursor.execute("""
+            UPDATE tracker3
+            SET weakness_level = %s
+            WHERE id = %s
+            """, (new_weakness, update_id))
 
-    cursor.execute("""
-    UPDATE tracker3
-    SET weakness_level = %s
-    WHERE id = %s
-    """, (new_weakness, update_id))
+            conn.commit()
+            print("Updated successfully.")
 
-    conn.commit()
-    print("Weakness level updated successfully.")
+        delete_choice = input("\nDelete record? (yes/no): ").lower()
 
-delete_choice = input("\nDo you want to delete a record? (yes/no): ").lower()
+        if delete_choice == "yes":
 
-if delete_choice == "yes":
-    cursor.execute("SELECT * FROM tracker2")
-    print("\nAll Records:")
-    for row in cursor.fetchall():
-        print(row)
+            cursor.execute("SELECT * FROM tracker3")
+            for row in cursor.fetchall():
+                print(row)
 
-    delete_id = int(input("\nEnter the ID of the record you want to delete: "))
+            delete_id = int(input("Enter ID: "))
 
-    cursor.execute("""
-    DELETE FROM tracker3
-    WHERE id = %s
-    """, (delete_id,))
+            cursor.execute("""
+            DELETE FROM tracker3
+            WHERE id = %s
+            """, (delete_id,))
 
-    conn.commit()
-    print("Record deleted successfully.")
+            conn.commit()
+            print("Deleted successfully.")
 
-cursor.execute("SELECT * FROM tracker2")
-print("\nFinal Records:")
-for row in cursor.fetchall():
-    print(row)
+        cursor.execute("SELECT * FROM tracker3")
+        print("\nFINAL RECORDS:")
+        for row in cursor.fetchall():
+            print(row)
 
-conn.commit ()
-conn.close ()
+user_id = input("Enter User ID: ")
+password = input("Enter Password: ")
+
+start_system(user_id, password)
+
+conn.commit()
+conn.close()
