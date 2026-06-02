@@ -65,7 +65,7 @@ def start_system(user_id, password):
                 choice = input("Select an option: ")
 
                 if choice == "1":
-                    cursor.execute("SELECT * FROM tracker2")
+                    cursor.execute("SELECT * FROM tracker3")
                     for row in cursor.fetchall(): print(row)
                 
                 elif choice == "2":
@@ -82,7 +82,7 @@ def start_system(user_id, password):
 
                 elif choice == "4":
                     del_id = input("Enter Record ID to delete from tracker: ")
-                    cursor.execute("DELETE FROM tracker2 WHERE id = %s", (del_id,))
+                    cursor.execute("DELETE FROM tracker3 WHERE id = %s", (del_id,))
                     conn.commit()
                     print("Record deleted.")
 
