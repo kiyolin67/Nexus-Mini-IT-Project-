@@ -4,13 +4,11 @@ from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from google import genai
 
-# Import Matplotlib for the Bar Chart
+ 
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
-# ==========================================
-# 1. YOUR BACKEND LOGIC (Untouched)
-# ==========================================
+
 def calculate_time_decay(current_score, last_studied_date_str):
     if not last_studied_date_str:
         return current_score, 0.0
@@ -53,7 +51,7 @@ def get_ai_study_advice(topic_name, duration_mins, confidence_level):
         return "Insights offline. Please try again later. Remember to use Spaced Repetition and take a 15-minute break every hour!"
 
 # ==========================================
-# 2. THE CUSTOMTKINTER DASHBOARD
+# 2. CUSTOMTKINTER DASHBOARD
 # ==========================================
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("dark-blue")
@@ -70,7 +68,6 @@ class NexusDashboard(ctk.CTk):
         self.left_frame = ctk.CTkFrame(self, width=300, corner_radius=0, fg_color="#2b2b2b")
         self.left_frame.pack(side="left", fill="y", padx=10, pady=10)
 
-        # Create Right Frame (Outputs: Chart + AI)
         self.right_frame = ctk.CTkFrame(self, corner_radius=10, fg_color="#1e1e1e")
         self.right_frame.pack(side="right", fill="both", expand=True, padx=10, pady=10)
 
@@ -154,7 +151,7 @@ class NexusDashboard(ctk.CTk):
         if self.canvas_widget:
             self.canvas_widget.destroy()
 
-        # Create a new Matplotlib Figure (Dark Theme)
+        
         fig, ax = plt.subplots(figsize=(5, 3), facecolor='#1e1e1e')
         ax.set_facecolor('#1e1e1e')
 
@@ -163,16 +160,13 @@ class NexusDashboard(ctk.CTk):
         values = [old_score, new_score]
         colors = ['#3498db', '#e74c3c' if penalty > 0 else '#2ecc71']
 
-        # Draw Bars
+        # Bar Chart
         bars = ax.bar(labels, values, color=colors, width=0.5)
         ax.set_ylim(0, 100)
-        
-        # Style the axes for the dark theme
         ax.tick_params(colors='white')
         for spine in ax.spines.values():
             spine.set_color('#444444')
-
-        # Add text labels on top of the bars
+            
         for bar in bars:
             yval = bar.get_height()
             ax.text(bar.get_x() + bar.get_width()/2, yval + 2, f"{yval}%", ha='center', color='white', fontweight='bold')
