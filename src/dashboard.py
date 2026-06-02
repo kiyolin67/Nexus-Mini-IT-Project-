@@ -42,9 +42,44 @@ def get_algorithmic_insights(duration_mins, confidence_level, penalty):
 
     return "\n\n".join(insights)
 
+# ==========================================
+# 2. MMU FOUNDATION CURRICULUM DATABASE
+# ==========================================
+MMU_COURSES = {
+    "Foundation in Computing": {
+        "Trimester 1": ["Intro to Computing Technologies", "Communicative English", "Mathematics I"],
+        "Trimester 2": ["Essential English", "Multimedia Fundamentals", "Mathematics II", "Intro to Business Management", "Problem Solving and Program Design" ],
+        "Trimester 3": ["Academic English", "Mathematics III", "Mini IT Project", "Critical Thinking", "Intro to Digital Systems", "Principle of Physics"]
+    },
+    "Foundation in Engineering": {
+        "Trimester 1": ["Algebra and Trigonometry", "Mechanics", "Communicative English", "Critical Thinking", "Physical Computing"],
+        "Trimester 2": ["Calculus and Linear Algebra", "Essential English", "Chemistry", "Electricity and Magnetism", "Intro to Business Management", "STEM Project"],
+        "Trimester 3": ["Academic English", "Modern Physics and Thermodynamics", "Intro to Probability and Statistics"]
+    },
+    "Foundation in Science and Technology": {
+        "Trimester 1": ["Communicative English", "Creative and Critical Thinking", "Foundation Math 1", "Intro to Computing and Technology", "Basic of Computer System Design", "Mechanics & Thermodynamics"],
+        "Trimester 2": ["Essential English", "Intro to Probability and Statistics", "Intro to Physics", "Waves & Modern Physics"],
+        "Trimester 3": ["Academic English", "Fundamental of Business Management", "Foundation Math 2", "Basic Database", "Problem Solving and Programming", "Electricity & Magnetism", "Chemistry"]
+    },
+    "Foundation in Creative Multimedia": {
+        "Trimester 1": ["Visual Research & Comm 1", "Life Drawing", "Basic Photography", "Computer Graphics 1", "Basic Sound Design", "Popular Culture Studies"],
+        "Trimester 2": ["Storytelling and Mythology"],
+        "Trimester 3": ["Visual Research & Comm 2", "Figure Drawing", "Creative Photography", "Computer Graphics 2", "Design & Art Appreciation", "Critical Thinking & Reasoning"]
+    },
+    "Foundation in Communication": {
+        "Trimester 1": ["Communicative English", "Communication Studies", "Fundamentals of Visual Comm", "Discovering Mass Comm", "Reasoning and Advocacy", "Fundamentals of Media Writing"],
+        "Trimester 2": ["Social and Emotional Health", "Public Speaking", "Essential English", "Communication and Culture", "Intro to Digital Content Entrepreneurship", "Digital Media Applications", "Social Network Application"],
+        "Trimester 3": ["Academic English", "Fundamentals of Integrated Marketing", "Fundamentals of Digital Journalism"]
+    },
+    "Foundation in Law": {
+        "Trimester 1": ["Communicative English", "Critical Thinking", "Computer Applications", "Intro to Law", "General Principles of Law", "Malaysian Legal History"],
+        "Trimester 2": ["Essential English", "Fundamentals of Business Management", "Basic Accounting for Lawyers", "Intro to Criminal and Constitutional Law", "Intro to Politics and Governance", "Intro to Syariah Law"],
+        "Trimester 3": ["English for Law", "Law and Society", "Intro to Commercial Law"]
+    }
+}
 
 # ==========================================
-# 2. THE MULTI-PAGE APPLICATION
+# 3. THE MULTI-PAGE APPLICATION
 # ==========================================
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("dark-blue")
@@ -56,11 +91,11 @@ class NexusApp(ctk.CTk):
         self.title("Nexus - Student Operating System")
         self.geometry("1100x700")
 
-        # MOCK DATABASE: Simulating Samuel's SQL backend for multiple subjects
+        # MOCK DATABASE: Using real MMU subjects as defaults
         self.mock_database = {
-            "FOE1010 - Calculus": {"duration": 60, "confidence": 4, "old_score": 85.0, "days_ago": 8},
-            "FCI1020 - Intro to Programming": {"duration": 120, "confidence": 2, "old_score": 60.0, "days_ago": 15},
-            "FOB1030 - Business Mgmt": {"duration": 30, "confidence": 5, "old_score": 95.0, "days_ago": 2}
+            "Mathematics I": {"duration": 60, "confidence": 4, "old_score": 85.0, "days_ago": 8},
+            "Problem Solving and Program Design": {"duration": 120, "confidence": 2, "old_score": 60.0, "days_ago": 15},
+            "Intro to Business Management": {"duration": 30, "confidence": 5, "old_score": 95.0, "days_ago": 2}
         }
         self.subject_list = list(self.mock_database.keys())
 
@@ -97,21 +132,41 @@ class NexusApp(ctk.CTk):
             self.input_page.grid(row=0, column=1, sticky="nsew", padx=20, pady=20)
         elif page_name == "analytics":
             self.analytics_page.grid(row=0, column=1, sticky="nsew", padx=20, pady=20)
-            # Default to the first subject in the list when opening the page
             self.analytics_dropdown.set(self.subject_list[0])
             self.refresh_analytics(self.subject_list[0]) 
 
     # ------------------------------------------
-    # PAGE 1: DATA ENTRY 
+    # PAGE 1: DATA ENTRY (Cascading Dropdowns)
     # ------------------------------------------
     def build_input_page(self):
-        ctk.CTkLabel(self.input_page, text="Log New Session", font=("Helvetica", 32, "bold")).pack(pady=(40, 20))
+        ctk.CTkLabel(self.input_page, text="Log New Session", font=("Helvetica", 32, "bold")).pack(pady=(20, 10))
 
-        ctk.CTkLabel(self.input_page, text="Select Subject:", font=("Helvetica", 16)).pack(pady=(20, 5))
-        self.var_subject = ctk.CTkOptionMenu(self.input_page, values=self.subject_list, width=300, height=40)
-        self.var_subject.pack(pady=5)
+        # --- THE CASCADING DROPDOWNS ---
+        dropdown_frame = ctk.CTkFrame(self.input_page, fg_color="transparent")
+        dropdown_frame.pack(pady=10)
 
-        ctk.CTkLabel(self.input_page, text="Study Duration (Minutes):", font=("Helvetica", 16)).pack(pady=(30, 5))
+        # 1. Program Selection
+        ctk.CTkLabel(dropdown_frame, text="Program:", font=("Helvetica", 14)).grid(row=0, column=0, padx=10, pady=5, sticky="e")
+        programs = list(MMU_COURSES.keys())
+        self.var_program = ctk.CTkOptionMenu(dropdown_frame, values=programs, width=300, command=self.update_trimesters)
+        self.var_program.grid(row=0, column=1, padx=10, pady=5)
+
+        # 2. Trimester Selection
+        ctk.CTkLabel(dropdown_frame, text="Trimester:", font=("Helvetica", 14)).grid(row=1, column=0, padx=10, pady=5, sticky="e")
+        self.var_trimester = ctk.CTkOptionMenu(dropdown_frame, values=[], width=300, command=self.update_subjects)
+        self.var_trimester.grid(row=1, column=1, padx=10, pady=5)
+
+        # 3. Subject Selection
+        ctk.CTkLabel(dropdown_frame, text="Subject:", font=("Helvetica", 14)).grid(row=2, column=0, padx=10, pady=5, sticky="e")
+        self.var_subject = ctk.CTkOptionMenu(dropdown_frame, values=[], width=300)
+        self.var_subject.grid(row=2, column=1, padx=10, pady=5)
+
+        # Initialize the dropdowns properly on first load
+        self.var_program.set(programs[0])
+        self.update_trimesters(programs[0])
+
+        # --- THE SLIDERS ---
+        ctk.CTkLabel(self.input_page, text="Study Duration (Minutes):", font=("Helvetica", 16)).pack(pady=(20, 5))
         self.var_duration = ctk.CTkSlider(self.input_page, from_=10, to=180, number_of_steps=34, width=400)
         self.var_duration.set(60)
         self.var_duration.pack(pady=5)
@@ -120,7 +175,7 @@ class NexusApp(ctk.CTk):
         self.label_duration_val.pack()
         self.var_duration.configure(command=lambda val: self.label_duration_val.configure(text=f"{int(val)} mins"))
 
-        ctk.CTkLabel(self.input_page, text="Confidence Level (1-5):", font=("Helvetica", 16)).pack(pady=(30, 5))
+        ctk.CTkLabel(self.input_page, text="Confidence Level (1-5):", font=("Helvetica", 16)).pack(pady=(20, 5))
         self.var_confidence = ctk.CTkSlider(self.input_page, from_=1, to=5, number_of_steps=4, width=400)
         self.var_confidence.set(3)
         self.var_confidence.pack(pady=5)
@@ -129,63 +184,76 @@ class NexusApp(ctk.CTk):
         self.label_conf_val.pack()
         self.var_confidence.configure(command=lambda val: self.label_conf_val.configure(text=f"Level {int(val)}"))
 
-        ctk.CTkButton(self.input_page, text="Save & Analyze", height=50, width=200, fg_color="#2ecc71", hover_color="#27ae60", command=self.save_session).pack(pady=50)
+        ctk.CTkButton(self.input_page, text="Save & Analyze", height=50, width=200, fg_color="#2ecc71", hover_color="#27ae60", command=self.save_session).pack(pady=30)
+
+    # --- CONTROLLER LOGIC FOR CASCADING ---
+    def update_trimesters(self, selected_program):
+        trimesters = list(MMU_COURSES[selected_program].keys())
+        self.var_trimester.configure(values=trimesters)
+        self.var_trimester.set(trimesters[0])
+        self.update_subjects(trimesters[0])
+
+    def update_subjects(self, selected_trimester):
+        selected_program = self.var_program.get()
+        subjects = MMU_COURSES[selected_program][selected_trimester]
+        self.var_subject.configure(values=subjects)
+        if subjects:
+            self.var_subject.set(subjects[0])
+        else:
+            self.var_subject.set("No Subjects Available")
 
     def save_session(self):
-        """Updates the mock DB with the newly logged data, then switches to Analytics."""
         subject = self.var_subject.get()
         
-        # Update the dictionary (simulating a database UPDATE)
+        # If this is a brand new subject not in the DB yet, initialize it
+        if subject not in self.mock_database:
+            self.mock_database[subject] = {"old_score": 80.0} # Default starting score
+            
+        # Update the dictionary
         self.mock_database[subject]["duration"] = int(self.var_duration.get())
         self.mock_database[subject]["confidence"] = int(self.var_confidence.get())
-        self.mock_database[subject]["days_ago"] = 0 # Just studied today!
+        self.mock_database[subject]["days_ago"] = 0 
         
-        # Switch to analytics and force it to show the subject just logged
+        # Refresh the analytics dropdown list so the new subject appears
+        self.subject_list = list(self.mock_database.keys())
+        self.analytics_dropdown.configure(values=self.subject_list)
+        
+        # Switch to analytics
         self.show_page("analytics")
         self.analytics_dropdown.set(subject)
         self.refresh_analytics(subject)
 
     # ------------------------------------------
-    # PAGE 2: ANALYTICS & INSIGHTS (Upgraded)
+    # PAGE 2: ANALYTICS & INSIGHTS
     # ------------------------------------------
     def build_analytics_page(self):
-        # NEW: Filter Area at the top
         self.filter_frame = ctk.CTkFrame(self.analytics_page, fg_color="transparent")
         self.filter_frame.pack(pady=(20, 10), fill="x", padx=40)
         
         ctk.CTkLabel(self.filter_frame, text="Viewing Analytics For:", font=("Helvetica", 16)).pack(side="left", padx=(0, 10))
         
-        # The dynamic dropdown that triggers refresh_analytics whenever it is changed
-        self.analytics_dropdown = ctk.CTkOptionMenu(self.filter_frame, values=self.subject_list, width=250, command=self.refresh_analytics)
+        self.analytics_dropdown = ctk.CTkOptionMenu(self.filter_frame, values=self.subject_list, width=300, command=self.refresh_analytics)
         self.analytics_dropdown.pack(side="left")
 
-        # Insights Panel
         self.textbox_insights = ctk.CTkTextbox(self.analytics_page, height=140, font=("Helvetica", 14), fg_color="#2b2b2b")
         self.textbox_insights.pack(fill="x", padx=40, pady=10)
 
-        # Graph Area
         self.chart_frame = ctk.CTkFrame(self.analytics_page, fg_color="#1e1e1e")
         self.chart_frame.pack(fill="both", expand=True, padx=40, pady=10)
         self.canvas_widget = None 
 
     def refresh_analytics(self, selected_subject):
-        """Pulls data for the selected subject and redraws the UI."""
-        
-        # 1. Fetch data for this specific subject from mock DB
         data = self.mock_database[selected_subject]
         
-        # 2. Math Engine
         fake_date_str = (datetime.now() - timedelta(days=data["days_ago"])).strftime("%Y-%m-%d")
         new_score, penalty = calculate_time_decay(data["old_score"], fake_date_str)
         
-        # 3. Insights Engine
         insights_text = get_algorithmic_insights(data["duration"], data["confidence"], penalty)
         self.textbox_insights.configure(state="normal")
         self.textbox_insights.delete("0.0", "end")
         self.textbox_insights.insert("0.0", f"--- SYSTEM EVALUATION ---\n\n{insights_text}")
         self.textbox_insights.configure(state="disabled")
 
-        # 4. Draw Charts
         self.draw_chart(data["old_score"], new_score, penalty)
 
     def draw_chart(self, old_score, new_score, penalty):
@@ -195,7 +263,6 @@ class NexusApp(ctk.CTk):
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(8, 3), facecolor='#1e1e1e')
         fig.patch.set_facecolor('#1e1e1e')
 
-        # Bar Chart
         ax1.set_facecolor('#1e1e1e')
         bars = ax1.bar(['Original', 'Decayed'], [old_score, new_score], color=['#3498db', '#e74c3c' if penalty > 0 else '#2ecc71'], width=0.5)
         ax1.set_ylim(0, 100)
@@ -204,7 +271,6 @@ class NexusApp(ctk.CTk):
         for spine in ax1.spines.values(): spine.set_color('#444444')
         for bar in bars: ax1.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 2, f"{bar.get_height()}%", ha='center', color='white', fontweight='bold')
 
-        # Line Graph
         ax2.set_facecolor('#1e1e1e')
         future_days = np.array([0, 7, 14, 21, 28])
         future_scores = np.maximum(new_score - (future_days / 7) * 5.0, 0)
