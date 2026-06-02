@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import numpy as np
+from timer import FocusTimerWindow
 
 # ==========================================
 # 1. CORE MATH & ALGORITHM ENGINE
@@ -136,57 +137,64 @@ class NexusApp(ctk.CTk):
             self.refresh_analytics(self.subject_list[0]) 
 
     # ------------------------------------------
-    # PAGE 1: DATA ENTRY (Cascading Dropdowns)
+    # PAGE 1: DATA ENTRY (Tabbed Interface)
     # ------------------------------------------
     def build_input_page(self):
-        ctk.CTkLabel(self.input_page, text="Log New Session", font=("Helvetica", 32, "bold")).pack(pady=(20, 10))
+        ctk.CTkLabel(self.input_page, text="Log Study Session", font=("Helvetica", 32, "bold")).pack(pady=(20, 10))
 
         # --- THE CASCADING DROPDOWNS ---
         dropdown_frame = ctk.CTkFrame(self.input_page, fg_color="transparent")
         dropdown_frame.pack(pady=10)
 
-        # 1. Program Selection
         ctk.CTkLabel(dropdown_frame, text="Program:", font=("Helvetica", 14)).grid(row=0, column=0, padx=10, pady=5, sticky="e")
         programs = list(MMU_COURSES.keys())
         self.var_program = ctk.CTkOptionMenu(dropdown_frame, values=programs, width=300, command=self.update_trimesters)
         self.var_program.grid(row=0, column=1, padx=10, pady=5)
 
-        # 2. Trimester Selection
         ctk.CTkLabel(dropdown_frame, text="Trimester:", font=("Helvetica", 14)).grid(row=1, column=0, padx=10, pady=5, sticky="e")
         self.var_trimester = ctk.CTkOptionMenu(dropdown_frame, values=[], width=300, command=self.update_subjects)
         self.var_trimester.grid(row=1, column=1, padx=10, pady=5)
 
-        # 3. Subject Selection
         ctk.CTkLabel(dropdown_frame, text="Subject:", font=("Helvetica", 14)).grid(row=2, column=0, padx=10, pady=5, sticky="e")
         self.var_subject = ctk.CTkOptionMenu(dropdown_frame, values=[], width=300)
         self.var_subject.grid(row=2, column=1, padx=10, pady=5)
 
-        # Initialize the dropdowns properly on first load
         self.var_program.set(programs[0])
         self.update_trimesters(programs[0])
 
-        # --- THE SLIDERS ---
-        ctk.CTkLabel(self.input_page, text="Study Duration (Minutes):", font=("Helvetica", 16)).pack(pady=(20, 5))
-        self.var_duration = ctk.CTkSlider(self.input_page, from_=10, to=180, number_of_steps=34, width=400)
+        # --- NEW: THE TABBED INTERFACE ---
+        self.log_tabs = ctk.CTkTabview(self.input_page, width=450, height=250)
+        self.log_tabs.pack(pady=20)
+        
+        self.log_tabs.add("⏱️ Active Timer")
+        self.log_tabs.add("📝 Manual Entry")
+
+        # TAB 1: Active Timer
+        ctk.CTkLabel(self.log_tabs.tab("⏱️ Active Timer"), text="Study with the app open to track exact time.", text_color="gray").pack(pady=(20, 10))
+        ctk.CTkButton(self.log_tabs.tab("⏱️ Active Timer"), text="Launch Focus Timer", height=50, width=250, font=("Helvetica", 16, "bold"), fg_color="#3498db", hover_color="#2980b9", command=self.open_timer).pack(pady=20)
+
+        # TAB 2: Manual Entry (Your old sliders brought back to life!)
+        ctk.CTkLabel(self.log_tabs.tab("📝 Manual Entry"), text="Duration (Minutes):", font=("Helvetica", 14)).pack(pady=(10, 0))
+        self.var_duration = ctk.CTkSlider(self.log_tabs.tab("📝 Manual Entry"), from_=10, to=180, number_of_steps=34, width=300)
         self.var_duration.set(60)
         self.var_duration.pack(pady=5)
         
-        self.label_duration_val = ctk.CTkLabel(self.input_page, text="60 mins", text_color="#3498db", font=("Helvetica", 14, "bold"))
+        self.label_duration_val = ctk.CTkLabel(self.log_tabs.tab("📝 Manual Entry"), text="60 mins", text_color="#3498db", font=("Helvetica", 12, "bold"))
         self.label_duration_val.pack()
         self.var_duration.configure(command=lambda val: self.label_duration_val.configure(text=f"{int(val)} mins"))
 
-        ctk.CTkLabel(self.input_page, text="Confidence Level (1-5):", font=("Helvetica", 16)).pack(pady=(20, 5))
-        self.var_confidence = ctk.CTkSlider(self.input_page, from_=1, to=5, number_of_steps=4, width=400)
+        ctk.CTkLabel(self.log_tabs.tab("📝 Manual Entry"), text="Confidence Level (1-5):", font=("Helvetica", 14)).pack(pady=(10, 0))
+        self.var_confidence = ctk.CTkSlider(self.log_tabs.tab("📝 Manual Entry"), from_=1, to=5, number_of_steps=4, width=300)
         self.var_confidence.set(3)
         self.var_confidence.pack(pady=5)
 
-        self.label_conf_val = ctk.CTkLabel(self.input_page, text="Level 3", text_color="#3498db", font=("Helvetica", 14, "bold"))
+        self.label_conf_val = ctk.CTkLabel(self.log_tabs.tab("📝 Manual Entry"), text="Level 3", text_color="#3498db", font=("Helvetica", 12, "bold"))
         self.label_conf_val.pack()
         self.var_confidence.configure(command=lambda val: self.label_conf_val.configure(text=f"Level {int(val)}"))
 
-        ctk.CTkButton(self.input_page, text="Save & Analyze", height=50, width=200, fg_color="#2ecc71", hover_color="#27ae60", command=self.save_session).pack(pady=30)
-
-    # --- CONTROLLER LOGIC FOR CASCADING ---
+        ctk.CTkButton(self.log_tabs.tab("📝 Manual Entry"), text="Save Manual Log", height=35, width=200, fg_color="#2ecc71", hover_color="#27ae60", command=self.save_session).pack(pady=10)
+    
+    # --- CONTROLLER LOGIC FOR INPUT PAGE ---
     def update_trimesters(self, selected_program):
         trimesters = list(MMU_COURSES[selected_program].keys())
         self.var_trimester.configure(values=trimesters)
@@ -202,16 +210,33 @@ class NexusApp(ctk.CTk):
         else:
             self.var_subject.set("No Subjects Available")
 
+    def open_timer(self):
+        """Launches the popup window and passes it the selected subject."""
+        selected_subject = self.var_subject.get()
+        if selected_subject and selected_subject != "No Subjects Available":
+            # Opens the timer and tells it to run receive_timer_data when finished
+            FocusTimerWindow(self, selected_subject, self.receive_timer_data)
+
+    def receive_timer_data(self, subject, duration, confidence):
+        """Bridge for the Active Timer tab."""
+        self._save_to_memory_and_switch(subject, duration, confidence)
+
     def save_session(self):
+        """Bridge for the Manual Entry tab."""
         subject = self.var_subject.get()
-        
+        duration = int(self.var_duration.get())
+        confidence = int(self.var_confidence.get())
+        self._save_to_memory_and_switch(subject, duration, confidence)
+
+    def _save_to_memory_and_switch(self, subject, duration, confidence):
+        """Internal helper to save data to the mock DB and switch pages."""
         # If this is a brand new subject not in the DB yet, initialize it
         if subject not in self.mock_database:
-            self.mock_database[subject] = {"old_score": 80.0} # Default starting score
+            self.mock_database[subject] = {"old_score": 80.0} 
             
         # Update the dictionary
-        self.mock_database[subject]["duration"] = int(self.var_duration.get())
-        self.mock_database[subject]["confidence"] = int(self.var_confidence.get())
+        self.mock_database[subject]["duration"] = duration
+        self.mock_database[subject]["confidence"] = confidence
         self.mock_database[subject]["days_ago"] = 0 
         
         # Refresh the analytics dropdown list so the new subject appears
@@ -222,7 +247,6 @@ class NexusApp(ctk.CTk):
         self.show_page("analytics")
         self.analytics_dropdown.set(subject)
         self.refresh_analytics(subject)
-
     # ------------------------------------------
     # PAGE 2: ANALYTICS & INSIGHTS
     # ------------------------------------------
