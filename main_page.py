@@ -2,7 +2,7 @@ import customtkinter as ctk
 import time
 from datetime import datetime
 
-# (Curriculum dataset dictionary left intact for project integrity)
+# Master structured curriculum data dictionary
 ACADEMIC_DATA = {
     "Bachelor of Computer Science": {
         "Year 1": ["Calculus", "Programming Fundamentals", "Discrete Structures & Probability", "Professional Development", "Computational Methods", "Object Oriented Programming & Data Structures", "Computer Architecture & Organisation", "Database Fundamentals", "Research Methodology in Computer Science", "Integrity and Leadership", "U4", "Character Building", "Sustainable Society"],
@@ -35,6 +35,44 @@ ACADEMIC_DATA = {
         "Year 3": ["Enterprise Resource Planning", "Cloud computing", "Management of Information Security", "Malware and Intrusion Detection", "Password Authentication and biometrics", "Digital Forensics", "Security Analysis and Vulnerability Assessment", "Python for Security", "Industrial Training", "Project 1 & 2"]
     }
 }
+
+
+class CTkTooltip:
+    """A lightweight tooltip handler that spawns a small panel near the cursor on hover."""
+    def __init__(self, widget, get_text_callback):
+        self.widget = widget
+        self.get_text_callback = get_text_callback
+        self.tooltip_window = None
+        
+        # Bind hover events
+        self.widget.bind("<Enter>", self.show_tooltip)
+        self.widget.bind("<Leave>", self.hide_tooltip)
+
+    def show_tooltip(self, event=None):
+        text = self.get_text_callback()
+        if not text:
+            return
+            
+        self.hide_tooltip()
+
+        self.tooltip_window = ctk.CTkToplevel(self.widget)
+        self.tooltip_window.wm_overrideredirect(True) 
+        
+        frame = ctk.CTkFrame(self.tooltip_window, fg_color="#131C32", border_width=1, border_color="#00F0FF")
+        frame.pack()
+        
+        label = ctk.CTkLabel(frame, text=text, font=("Arial", 11), text_color="#FFFFFF", wraplength=250, justify="left")
+        label.pack(padx=8, pady=5)
+
+        x = self.widget.winfo_pointerx() + 15
+        y = self.widget.winfo_pointery() + 10
+        self.tooltip_window.wm_geometry(f"+{x}+{y}")
+
+    def hide_tooltip(self, event=None):
+        if self.tooltip_window:
+            self.tooltip_window.destroy()
+            self.tooltip_window = None
+
 
 class LogSessionWindow(ctk.CTkToplevel):
     def __init__(self, parent, subject_name, completion_callback):
@@ -99,6 +137,7 @@ class MainPage(ctk.CTkFrame):
     def __init__(self, parent):
         super().__init__(parent, fg_color="#0A0F1D")
 
+        # Layout grids configuration
         self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(0, weight=1) 
         self.grid_rowconfigure(1, weight=1) 
@@ -106,20 +145,20 @@ class MainPage(ctk.CTkFrame):
         self.degree_map = {}
         self.subject_map = {}
 
-        # --- 1. SIDEBAR (Course Filtration Controls) ---
+        # --- 1. SIDEBAR CONFIGURATION ---
         self.sidebar = ctk.CTkFrame(self, width=230, fg_color="#0D1527", border_width=1, border_color="#1F2E54")
         self.sidebar.grid(row=0, column=0, rowspan=2, sticky="nsew", padx=5, pady=5)
         self.sidebar.grid_propagate(False) 
         
         ctk.CTkLabel(self.sidebar, text="Course Selection", font=("Arial", 18, "bold"), text_color="#00F0FF").pack(pady=(25, 20))
 
-        # Dropdowns Styling
         dropdown_kwargs = {
             "width": 200, "height": 35, "fg_color": "#131C32", "button_color": "#1F2E54",
             "button_hover_color": "#2D437A", "text_color": "#FFFFFF", "dropdown_fg_color": "#131C32",
             "dropdown_text_color": "#FFFFFF", "dropdown_hover_color": "#1F2E54"
         }
 
+        # Degree UI Elements
         ctk.CTkLabel(self.sidebar, text="Select Degree:", font=("Arial", 12), text_color="#8A99AD").pack(anchor="w", padx=15)
         display_degrees = [self.truncate_text(name, 24) for name in ACADEMIC_DATA.keys()]
         for full, short in zip(ACADEMIC_DATA.keys(), display_degrees):
@@ -127,23 +166,27 @@ class MainPage(ctk.CTkFrame):
 
         self.degree_dropdown = ctk.CTkOptionMenu(self.sidebar, values=display_degrees, command=self.update_years, **dropdown_kwargs)
         self.degree_dropdown.pack(pady=(0, 15), padx=15)
+        CTkTooltip(self.degree_dropdown, lambda: self.degree_map.get(self.degree_dropdown.get()))
 
+        # Year UI Elements
         ctk.CTkLabel(self.sidebar, text="Select Year:", font=("Arial", 12), text_color="#8A99AD").pack(anchor="w", padx=15)
         self.year_dropdown = ctk.CTkOptionMenu(self.sidebar, values=[], command=self.update_subjects, **dropdown_kwargs)
         self.year_dropdown.pack(pady=(0, 15), padx=15)
 
+        # Subject UI Elements
         ctk.CTkLabel(self.sidebar, text="Select Subject:", font=("Arial", 12), text_color="#8A99AD").pack(anchor="w", padx=15)
         self.subject_dropdown = ctk.CTkOptionMenu(self.sidebar, values=[], **dropdown_kwargs)
         self.subject_dropdown.pack(pady=(0, 25), padx=15)
+        CTkTooltip(self.subject_dropdown, lambda: self.subject_map.get(self.subject_dropdown.get()))
 
         self.add_btn = ctk.CTkButton(self.sidebar, text="Add to Dashboard", font=("Arial", 13, "bold"), width=200, height=40, fg_color="#00F0FF", hover_color="#00C8D6", text_color="#0A0F1D", command=self.add_selected_subject)
         self.add_btn.pack(pady=5, padx=15)
 
-        # --- 2. MAIN DISPLAY UPPER BLOCK (Active Trackers) ---
+        # --- 2. ACTIVE CARDS TRACKER PANEL ---
         self.scroll_frame = ctk.CTkScrollableFrame(self, label_text="Your Active Studies", fg_color="#0A0F1D", label_text_color="#8A99AD")
         self.scroll_frame.grid(row=0, column=1, sticky="nsew", padx=5, pady=5)
 
-        # --- 3. MAIN DISPLAY LOWER BLOCK (Graph View) ---
+        # --- 3. MASTERY GRAPH HOUSING AREA ---
         self.graph_frame = ctk.CTkFrame(self, fg_color="#0D1527", border_width=1, border_color="#1F2E54")
         self.graph_frame.grid(row=1, column=1, sticky="nsew", padx=5, pady=5)
         ctk.CTkLabel(self.graph_frame, text="Mastery Score Graph", font=("Arial", 16, "bold"), text_color="#FFFFFF").pack(pady=10)
@@ -151,7 +194,7 @@ class MainPage(ctk.CTkFrame):
         self.graph_canvas = ctk.CTkFrame(self.graph_frame, fg_color="#060A12", height=200)
         self.graph_canvas.pack(fill="both", expand=True, padx=20, pady=10)
 
-        # --- 4. FLOATING CHAT WIDGET OVERLAY ---
+        # --- 4. FLOATING SYSTEM ASSISTANT OVERLAY ---
         self.chat_box = ctk.CTkFrame(self, width=260, height=160, fg_color="#0D1527", border_width=1, border_color="#00F0FF")
         self.chat_box.place(relx=0.98, rely=0.98, anchor="se")
         
@@ -161,6 +204,7 @@ class MainPage(ctk.CTkFrame):
         self.chat_entry = ctk.CTkEntry(self.chat_box, placeholder_text="Ask me...", width=240, fg_color="#131C32", text_color="#FFFFFF", border_color="#1F2E54")
         self.chat_entry.pack(padx=10, pady=5)
 
+        # Build initial dependencies loop structure
         self.update_years(self.degree_dropdown.get())
 
     def truncate_text(self, text, limit=24):
@@ -204,11 +248,12 @@ class MainPage(ctk.CTkFrame):
         self.chat_display.insert("end", f"\n[{timestamp.split()[0]}] Tracked {duration} -> {self.truncate_text(subject, 12)}")
 
     def create_card(self, name):
-        # Card matching the dark obsidian theme
         card = ctk.CTkFrame(self.scroll_frame, fg_color="#0D1527", border_width=1, border_color="#1F2E54")
         card.pack(fill="x", pady=5, padx=5)
         
-        ctk.CTkLabel(card, text=name, font=("Arial", 13, "bold"), text_color="#FFFFFF").pack(side="left", padx=15, pady=12)
+        lbl = ctk.CTkLabel(card, text=self.truncate_text(name, 28), font=("Arial", 13, "bold"), text_color="#FFFFFF")
+        lbl.pack(side="left", padx=15, pady=12)
+        CTkTooltip(lbl, lambda: name)
         
         start_session_btn = ctk.CTkButton(
             card, text="Start Session", width=110, height=30,

@@ -28,3 +28,19 @@ class App(ctk.CTk):
 if __name__ == "__main__":
     app = App()
     app.mainloop()
+
+#delete log button for subjects
+#add in drop down function for subjects
+#add in date/time for logs 
+#add in time log session
+#add in topics user functions 
+#samuel can use django database
+#week 9 online
+#make sure to know where is what your code is 
+#make standard colour for all three of us
+#add in recommendation score if below mastery level 
+#add in test score percentage
+#make sure all the color is the same
+#Include start count and end time (keep total timing)
+#ai as
+
