@@ -3,7 +3,10 @@ from datetime import datetime, timedelta
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import numpy as np
+
+# --- MODULE IMPORTS ---
 from timer import FocusTimerWindow
+from heatmap_ui import ActivityHeatmap
 
 # ==========================================
 # 1. CORE MATH & ALGORITHM ENGINE
@@ -90,9 +93,8 @@ class NexusApp(ctk.CTk):
         super().__init__()
 
         self.title("Nexus - Student Operating System")
-        self.geometry("1100x700")
+        self.geometry("1100x750")
 
-        # MOCK DATABASE: Using real MMU subjects as defaults
         self.mock_database = {
             "Mathematics I": {"duration": 60, "confidence": 4, "old_score": 85.0, "days_ago": 8},
             "Problem Solving and Program Design": {"duration": 120, "confidence": 2, "old_score": 60.0, "days_ago": 15},
@@ -100,7 +102,6 @@ class NexusApp(ctk.CTk):
         }
         self.subject_list = list(self.mock_database.keys())
 
-        # Setup Grid Layout 
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=1)
 
@@ -110,26 +111,36 @@ class NexusApp(ctk.CTk):
 
         ctk.CTkLabel(self.sidebar_frame, text="NEXUS", font=("Helvetica", 28, "bold"), text_color="#3498db").pack(pady=(30, 40))
 
-        self.btn_nav_input = ctk.CTkButton(self.sidebar_frame, text="Log Study Session", command=lambda: self.show_page("input"), fg_color="transparent", border_width=1, hover_color="#2c3e50")
+        # Added Home Dashboard Button
+        self.btn_nav_home = ctk.CTkButton(self.sidebar_frame, text="🏠 Home Dashboard", command=lambda: self.show_page("home"), fg_color="transparent", border_width=1, hover_color="#2c3e50")
+        self.btn_nav_home.pack(pady=10, padx=20, fill="x")
+
+        self.btn_nav_input = ctk.CTkButton(self.sidebar_frame, text="📝 Log Study Session", command=lambda: self.show_page("input"), fg_color="transparent", border_width=1, hover_color="#2c3e50")
         self.btn_nav_input.pack(pady=10, padx=20, fill="x")
 
-        self.btn_nav_analytics = ctk.CTkButton(self.sidebar_frame, text="View Analytics", command=lambda: self.show_page("analytics"), fg_color="transparent", border_width=1, hover_color="#2c3e50")
+        self.btn_nav_analytics = ctk.CTkButton(self.sidebar_frame, text="📊 View Analytics", command=lambda: self.show_page("analytics"), fg_color="transparent", border_width=1, hover_color="#2c3e50")
         self.btn_nav_analytics.pack(pady=10, padx=20, fill="x")
 
         # --- PAGE CONTAINERS ---
+        self.home_page = ctk.CTkFrame(self, corner_radius=10, fg_color="#1e1e1e")
         self.input_page = ctk.CTkFrame(self, corner_radius=10, fg_color="#1e1e1e")
         self.analytics_page = ctk.CTkFrame(self, corner_radius=10, fg_color="#1e1e1e")
 
+        self.build_home_page()
         self.build_input_page()
         self.build_analytics_page()
 
-        self.show_page("input")
+        # Start on the Home Dashboard
+        self.show_page("home")
 
     def show_page(self, page_name):
+        self.home_page.grid_forget()
         self.input_page.grid_forget()
         self.analytics_page.grid_forget()
 
-        if page_name == "input":
+        if page_name == "home":
+            self.home_page.grid(row=0, column=1, sticky="nsew", padx=20, pady=20)
+        elif page_name == "input":
             self.input_page.grid(row=0, column=1, sticky="nsew", padx=20, pady=20)
         elif page_name == "analytics":
             self.analytics_page.grid(row=0, column=1, sticky="nsew", padx=20, pady=20)
@@ -137,12 +148,49 @@ class NexusApp(ctk.CTk):
             self.refresh_analytics(self.subject_list[0]) 
 
     # ------------------------------------------
-    # PAGE 1: DATA ENTRY (Tabbed Interface)
+    # PAGE 1: HOME DASHBOARD (NEW)
+    # ------------------------------------------
+    def build_home_page(self):
+        # Welcome Banner
+        ctk.CTkLabel(self.home_page, text="Welcome back, Scholar.", font=("Helvetica", 32, "bold")).pack(pady=(40, 10))
+        ctk.CTkLabel(self.home_page, text="Here is your study overview for this month.", font=("Helvetica", 16), text_color="gray").pack(pady=(0, 30))
+
+        # Top Metrics Frame
+        metrics_frame = ctk.CTkFrame(self.home_page, fg_color="transparent")
+        metrics_frame.pack(pady=10, fill="x", padx=50)
+
+        # Metric 1: Total Hours
+        card1 = ctk.CTkFrame(metrics_frame, fg_color="#2b2b2b", corner_radius=15, width=200, height=100)
+        card1.pack(side="left", expand=True, padx=10)
+        card1.pack_propagate(False)
+        ctk.CTkLabel(card1, text="Total Study Hours", font=("Helvetica", 14), text_color="gray").pack(pady=(15, 5))
+        ctk.CTkLabel(card1, text="32.5 hrs", font=("Helvetica", 28, "bold"), text_color="#3498db").pack()
+
+        # Metric 2: Current Streak
+        card2 = ctk.CTkFrame(metrics_frame, fg_color="#2b2b2b", corner_radius=15, width=200, height=100)
+        card2.pack(side="left", expand=True, padx=10)
+        card2.pack_propagate(False)
+        ctk.CTkLabel(card2, text="Current Streak", font=("Helvetica", 14), text_color="gray").pack(pady=(15, 5))
+        ctk.CTkLabel(card2, text="4 Days 🔥", font=("Helvetica", 28, "bold"), text_color="#e67e22").pack()
+
+        # Metric 3: Subjects Tracked
+        card3 = ctk.CTkFrame(metrics_frame, fg_color="#2b2b2b", corner_radius=15, width=200, height=100)
+        card3.pack(side="left", expand=True, padx=10)
+        card3.pack_propagate(False)
+        ctk.CTkLabel(card3, text="Subjects Tracked", font=("Helvetica", 14), text_color="gray").pack(pady=(15, 5))
+        ctk.CTkLabel(card3, text=f"{len(self.subject_list)}", font=("Helvetica", 28, "bold"), text_color="#2ecc71").pack()
+
+        # PLUG IN THE HEATMAP MODULE!
+        ctk.CTkLabel(self.home_page, text="Consistency Heatmap", font=("Helvetica", 18, "bold")).pack(pady=(40, 10))
+        self.heatmap_widget = ActivityHeatmap(self.home_page)
+        self.heatmap_widget.pack(pady=10, padx=50, fill="x")
+
+    # ------------------------------------------
+    # PAGE 2: DATA ENTRY (Tabbed Interface)
     # ------------------------------------------
     def build_input_page(self):
         ctk.CTkLabel(self.input_page, text="Log Study Session", font=("Helvetica", 32, "bold")).pack(pady=(20, 10))
 
-        # --- THE CASCADING DROPDOWNS ---
         dropdown_frame = ctk.CTkFrame(self.input_page, fg_color="transparent")
         dropdown_frame.pack(pady=10)
 
@@ -162,18 +210,15 @@ class NexusApp(ctk.CTk):
         self.var_program.set(programs[0])
         self.update_trimesters(programs[0])
 
-        # --- NEW: THE TABBED INTERFACE ---
         self.log_tabs = ctk.CTkTabview(self.input_page, width=450, height=250)
         self.log_tabs.pack(pady=20)
         
         self.log_tabs.add("⏱️ Active Timer")
         self.log_tabs.add("📝 Manual Entry")
 
-        # TAB 1: Active Timer
         ctk.CTkLabel(self.log_tabs.tab("⏱️ Active Timer"), text="Study with the app open to track exact time.", text_color="gray").pack(pady=(20, 10))
         ctk.CTkButton(self.log_tabs.tab("⏱️ Active Timer"), text="Launch Focus Timer", height=50, width=250, font=("Helvetica", 16, "bold"), fg_color="#3498db", hover_color="#2980b9", command=self.open_timer).pack(pady=20)
 
-        # TAB 2: Manual Entry (Your old sliders brought back to life!)
         ctk.CTkLabel(self.log_tabs.tab("📝 Manual Entry"), text="Duration (Minutes):", font=("Helvetica", 14)).pack(pady=(10, 0))
         self.var_duration = ctk.CTkSlider(self.log_tabs.tab("📝 Manual Entry"), from_=10, to=180, number_of_steps=34, width=300)
         self.var_duration.set(60)
@@ -193,7 +238,7 @@ class NexusApp(ctk.CTk):
         self.var_confidence.configure(command=lambda val: self.label_conf_val.configure(text=f"Level {int(val)}"))
 
         ctk.CTkButton(self.log_tabs.tab("📝 Manual Entry"), text="Save Manual Log", height=35, width=200, fg_color="#2ecc71", hover_color="#27ae60", command=self.save_session).pack(pady=10)
-    
+
     # --- CONTROLLER LOGIC FOR INPUT PAGE ---
     def update_trimesters(self, selected_program):
         trimesters = list(MMU_COURSES[selected_program].keys())
@@ -211,44 +256,36 @@ class NexusApp(ctk.CTk):
             self.var_subject.set("No Subjects Available")
 
     def open_timer(self):
-        """Launches the popup window and passes it the selected subject."""
         selected_subject = self.var_subject.get()
         if selected_subject and selected_subject != "No Subjects Available":
-            # Opens the timer and tells it to run receive_timer_data when finished
             FocusTimerWindow(self, selected_subject, self.receive_timer_data)
 
     def receive_timer_data(self, subject, duration, confidence):
-        """Bridge for the Active Timer tab."""
         self._save_to_memory_and_switch(subject, duration, confidence)
 
     def save_session(self):
-        """Bridge for the Manual Entry tab."""
         subject = self.var_subject.get()
         duration = int(self.var_duration.get())
         confidence = int(self.var_confidence.get())
         self._save_to_memory_and_switch(subject, duration, confidence)
 
     def _save_to_memory_and_switch(self, subject, duration, confidence):
-        """Internal helper to save data to the mock DB and switch pages."""
-        # If this is a brand new subject not in the DB yet, initialize it
         if subject not in self.mock_database:
             self.mock_database[subject] = {"old_score": 80.0} 
             
-        # Update the dictionary
         self.mock_database[subject]["duration"] = duration
         self.mock_database[subject]["confidence"] = confidence
         self.mock_database[subject]["days_ago"] = 0 
         
-        # Refresh the analytics dropdown list so the new subject appears
         self.subject_list = list(self.mock_database.keys())
         self.analytics_dropdown.configure(values=self.subject_list)
         
-        # Switch to analytics
         self.show_page("analytics")
         self.analytics_dropdown.set(subject)
         self.refresh_analytics(subject)
+
     # ------------------------------------------
-    # PAGE 2: ANALYTICS & INSIGHTS
+    # PAGE 3: ANALYTICS & INSIGHTS
     # ------------------------------------------
     def build_analytics_page(self):
         self.filter_frame = ctk.CTkFrame(self.analytics_page, fg_color="transparent")
