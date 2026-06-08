@@ -8,7 +8,6 @@ from database import save_focus_session
 # --- MODULE IMPORTS ---
 from timer import FocusTimerWindow
 from heatmap_ui import ActivityHeatmap
-from database import save_focus_session
 
 # ==========================================
 # 1. CORE MATH & ALGORITHM ENGINE
@@ -27,26 +26,39 @@ def calculate_time_decay(current_score, last_studied_date_str):
         return round(max(current_score - penalty, 0.0), 1), penalty
     return current_score, 0.0
 
+def get_grade(score):
+    """Converts a mastery percentage into a standard University Letter Grade."""
+    if score >= 80: return "A", "#2ecc71"  # Green
+    if score >= 70: return "B", "#3498db"  # Blue
+    if score >= 60: return "C", "#f1c40f"  # Yellow
+    if score >= 50: return "D", "#e67e22"  # Orange
+    return "F", "#e74c3c"                  # Red
+
 def get_algorithmic_insights(duration_mins, confidence_level, penalty):
+    """Now returns a list of dictionaries containing both text AND a hex color code."""
     insights = []
+    
+    # Decay Insights
     if penalty >= 10.0:
-        insights.append("🔴 CRITICAL DECAY: High memory loss detected. Immediate review required.")
+        insights.append({"text": "🚨 CRITICAL DECAY: High memory loss detected. Immediate review required.", "color": "#e74c3c"})
     elif penalty > 0.0:
-        insights.append("🟡 WARNING: Memory decay has started. Schedule a review session within 48 hours.")
+        insights.append({"text": "⚠️ WARNING: Memory decay has started. Schedule a review session.", "color": "#f1c40f"})
     else:
-        insights.append("🟢 OPTIMAL: You are studying within the ideal spaced-repetition window.")
+        insights.append({"text": "✅ OPTIMAL: You are studying within the ideal spaced-repetition window.", "color": "#2ecc71"})
 
+    # Efficiency Insights
     if duration_mins > 90:
-        insights.append("🧠 EFFICIENCY DROP: Sessions over 90 mins risk cognitive burnout. Take breaks.")
+        insights.append({"text": "🧠 EFFICIENCY DROP: Sessions over 90 mins risk cognitive burnout. Take breaks.", "color": "#e67e22"})
     elif duration_mins < 20:
-        insights.append("⏱️ MICRO-SESSION: Session is too short for deep cognitive work. Aim for 25+ mins.")
+        insights.append({"text": "⏱️ MICRO-SESSION: Too short for deep cognitive work. Aim for 25+ mins.", "color": "#f1c40f"})
 
+    # Strategy Insights
     if confidence_level <= 2:
-        insights.append("📚 STRATEGY: Low confidence. Shift focus from passive reading to active recall.")
+        insights.append({"text": "📚 STRATEGY: Low confidence. Shift focus from passive reading to active recall.", "color": "#3498db"})
     elif confidence_level >= 4:
-        insights.append("🚀 MASTERY: High confidence. Begin testing yourself with past year exam papers.")
+        insights.append({"text": "🚀 MASTERY: High confidence. Begin testing yourself with past year exam papers.", "color": "#2ecc71"})
 
-    return "\n\n".join(insights)
+    return insights 
 
 # ==========================================
 # 2. MMU FOUNDATION CURRICULUM DATABASE
