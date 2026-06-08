@@ -1,16 +1,22 @@
 import mysql.connector
 
+# AIVEN MYSQL CONNECTION
+
 conn = mysql.connector.connect(
-    host="localhost",
-    user="root",
-    password="12345qwert@",
-    database="tracker_db"
+    host="nexusproject-nexusproject-ac15.g.aivencloud.com",
+    port=20625,
+    user="avnadmin",
+    password="YOUR_AIVEN_PASSWORD",
+    database="defaultdb"
 )
 
-ADMIN_ID = "ADMIN123"
-ADMIN_PASSWORD = "00000"
-
 cursor = conn.cursor()
+
+# CURRENT USER TRACKER
+
+CURRENT_USER = None
+
+# TABLE CREATION
 
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS users (
@@ -36,136 +42,157 @@ CREATE TABLE IF NOT EXISTS tracker3(
 )
 """)
 
+conn.commit()
+
+# USER FUNCTIONS
+
+def set_current_user(user_id):
+    global CURRENT_USER
+    CURRENT_USER = user_id
+
+
 def save_user(user_id, password):
 
     cursor.execute("""
-    SELECT * FROM users
-    WHERE user_id = %s AND password = %s
-    """, (user_id, password))
+    SELECT *
+    FROM users
+    WHERE user_id = %s
+    """, (user_id,))
 
     existing_user = cursor.fetchone()
 
     if not existing_user:
 
         cursor.execute("""
-        INSERT INTO users (user_id, password)
+        INSERT INTO users (
+            user_id,
+            password
+        )
         VALUES (%s, %s)
-        """, (user_id, password))
+        """, (
+            user_id,
+            password
+        ))
 
         conn.commit()
 
-def start_system(user_id, password):
 
-    save_user(user_id, password)
+def user_exists(user_id, password):
 
-    if user_id == ADMIN_ID and password == ADMIN_PASSWORD:
-            print("\n" + "="*30 + "\nADMIN MANAGEMENT CONSOLE\n" + "="*30)
-            while True:
-                print("\n1. View All Study Records\n2. View All Users\n3. Edit User ID/Password\n4. Delete a Record\n5. Exit")
-                choice = input("Select an option: ")
+    cursor.execute("""
+    SELECT *
+    FROM users
+    WHERE user_id = %s
+    AND password = %s
+    """, (
+        user_id,
+        password
+    ))
 
-                if choice == "1":
-                    cursor.execute("SELECT * FROM tracker3")
-                    for row in cursor.fetchall(): print(row)
-                
-                elif choice == "2":
-                    cursor.execute("SELECT * FROM users")
-                    for row in cursor.fetchall(): print(row)
+    return cursor.fetchone()
 
-                elif choice == "3":
-                    old_id = input("Enter User ID to edit: ")
-                    new_id = input("Enter new User ID (or press enter to keep): ") or old_id
-                    new_pass = input("Enter new Password: ")
-                    cursor.execute("UPDATE users SET user_id = %s, password = %s WHERE user_id = %s", (new_id, new_pass, old_id))
-                    conn.commit()
-                    print("User updated.")
+# FOCUS TIMER FUNCTION
 
-                elif choice == "4":
-                    del_id = input("Enter Record ID to delete from tracker: ")
-                    cursor.execute("DELETE FROM tracker3 WHERE id = %s", (del_id,))
-                    conn.commit()
-                    print("Record deleted.")
+def save_focus_session(
+    subject_name,
+    duration,
+    confidence
+):
 
-                elif choice == "5":
-                    break
+    global CURRENT_USER
 
-    else:
+    if CURRENT_USER is None:
+        print("No logged in user.")
+        return
 
-        X = input("What subject are you studying right now?: ").upper()
-        Y = int(input("Timer (hours only): "))
-        Z = int(input("Weakness level: "))
+    cursor.execute("""
+    INSERT INTO tracker3 (
+        user_id,
+        topic,
+        duration,
+        weakness_level
+    )
+    VALUES (%s, %s, %s, %s)
+    """, (
+        CURRENT_USER,
+        subject_name,
+        duration,
+        confidence
+    ))
 
-        cursor.execute("""
-        INSERT INTO tracker3 (user_id, topic, duration, weakness_level)
-        VALUES (%s, %s, %s, %s)
-        """, (user_id, X, Y, Z))
+    conn.commit()
 
-        conn.commit()
+    print(
+        f"Saved -> "
+        f"User: {CURRENT_USER}, "
+        f"Subject: {subject_name}, "
+        f"Duration: {duration}, "
+        f"Confidence: {confidence}"
+    )
 
-        cursor.execute("""
-        SELECT * FROM tracker3
-        WHERE topic = %s
-        """, (X,))
+# DATA RETRIEVAL
 
-        print("\nRecord for this subject:")
-        for row in cursor.fetchall():
-            print(row)
+def get_all_users():
 
-        cursor.execute("""
-        SELECT COUNT(*) FROM tracker3
-        WHERE topic = %s
-        """, (X,))
+    cursor.execute("""
+    SELECT *
+    FROM users
+    """)
 
-        count = cursor.fetchone()[0]
-        print(f"\nYou have studied {X} {count} times.")
+    return cursor.fetchall()
 
-        update_choice = input("\nUpdate weakness? (yes/no): ").lower()
 
-        if update_choice == "yes":
+def get_all_sessions():
 
-            cursor.execute("SELECT * FROM tracker3")
-            for row in cursor.fetchall():
-                print(row)
+    cursor.execute("""
+    SELECT *
+    FROM tracker3
+    """)
 
-            update_id = int(input("Enter ID: "))
-            new_weakness = int(input("New weakness level: "))
+    return cursor.fetchall()
 
-            cursor.execute("""
-            UPDATE tracker3
-            SET weakness_level = %s
-            WHERE id = %s
-            """, (new_weakness, update_id))
 
-            conn.commit()
-            print("Updated successfully.")
+def get_user_sessions(user_id):
 
-        delete_choice = input("\nDelete record? (yes/no): ").lower()
+    cursor.execute("""
+    SELECT *
+    FROM tracker3
+    WHERE user_id = %s
+    """, (user_id,))
 
-        if delete_choice == "yes":
+    return cursor.fetchall()
 
-            cursor.execute("SELECT * FROM tracker3")
-            for row in cursor.fetchall():
-                print(row)
+# OPTIONAL UPDATE / DELETE
 
-            delete_id = int(input("Enter ID: "))
+def update_weakness(
+    record_id,
+    new_weakness
+):
 
-            cursor.execute("""
-            DELETE FROM tracker3
-            WHERE id = %s
-            """, (delete_id,))
+    cursor.execute("""
+    UPDATE tracker3
+    SET weakness_level = %s
+    WHERE id = %s
+    """, (
+        new_weakness,
+        record_id
+    ))
 
-            conn.commit()
-            print("Deleted successfully.")
+    conn.commit()
 
-        cursor.execute("SELECT * FROM tracker3")
-        print("\nFINAL RECORDS:")
-        for row in cursor.fetchall():
-            print(row)
 
-user_id = input("Enter User ID: ")
-password = input("Enter Password: ")
+def delete_session(record_id):
 
-start_system(user_id, password)
+    cursor.execute("""
+    DELETE FROM tracker3
+    WHERE id = %s
+    """, (record_id,))
 
-conn.commit()
-conn.close()
+    conn.commit()
+
+# DATABASE CLEANUP
+
+def close_database():
+
+    conn.commit()
+    conn.close()
