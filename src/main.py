@@ -278,6 +278,7 @@ class NexusApp(ctk.CTk):
         subject = self.var_subject.get()
         duration = int(self.var_duration.get())
         confidence = int(self.var_confidence.get())
+        save_focus_session(subject, duration, confidence)
         self._save_to_memory_and_switch(subject, duration, confidence)
 
     def _save_to_memory_and_switch(self, subject, duration, confidence):
