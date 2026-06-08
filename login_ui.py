@@ -1,4 +1,5 @@
 import customtkinter as ctk
+from database import set_current_user
 
 def clear_window():
     for widget in app.winfo_children():
