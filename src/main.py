@@ -3,10 +3,12 @@ from datetime import datetime, timedelta
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import numpy as np
+from database import save_focus_session
 
 # --- MODULE IMPORTS ---
 from timer import FocusTimerWindow
 from heatmap_ui import ActivityHeatmap
+from database import save_focus)session
 
 # ==========================================
 # 1. CORE MATH & ALGORITHM ENGINE
@@ -261,7 +263,16 @@ class NexusApp(ctk.CTk):
             FocusTimerWindow(self, selected_subject, self.receive_timer_data)
 
     def receive_timer_data(self, subject, duration, confidence):
-        self._save_to_memory_and_switch(subject, duration, confidence)
+        save_focus_session(
+            subject,
+            duration,
+            confidence
+        )
+        self.save_to_memory_and_switch(
+            subject,
+            duration,
+            confidence
+        )
 
     def save_session(self):
         subject = self.var_subject.get()
