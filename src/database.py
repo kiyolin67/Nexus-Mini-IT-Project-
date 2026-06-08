@@ -6,7 +6,7 @@ conn = mysql.connector.connect(
     host="nexusproject-nexusproject-ac15.g.aivencloud.com",
     port=20625,
     user="avnadmin",
-    password="YOUR_AIVEN_PASSWORD",
+    password="AVNS_C34T5eZzIaw4tZvS43_",
     database="defaultdb"
 )
 
@@ -15,6 +15,11 @@ cursor = conn.cursor()
 # CURRENT USER TRACKER
 
 CURRENT_USER = None
+
+# ADMIN ACCOUNT
+
+ADMIN_ID = "ADMIN123"
+ADMIN_PASSWORD = "00000"
 
 # TABLE CREATION
 
@@ -90,6 +95,62 @@ def user_exists(user_id, password):
     ))
 
     return cursor.fetchone()
+
+# ADMIN FUNCTIONS
+
+def is_admin(user_id, password):
+
+    return (
+        user_id == ADMIN_ID
+        and
+        password == ADMIN_PASSWORD
+    )
+
+
+def create_user(user_id, password):
+
+    cursor.execute("""
+    INSERT INTO users (
+        user_id,
+        password
+    )
+    VALUES (%s, %s)
+    """, (
+        user_id,
+        password
+    ))
+
+    conn.commit()
+
+
+def edit_user(
+    old_user_id,
+    new_user_id,
+    new_password
+):
+
+    cursor.execute("""
+    UPDATE users
+    SET user_id = %s,
+        password = %s
+    WHERE user_id = %s
+    """, (
+        new_user_id,
+        new_password,
+        old_user_id
+    ))
+
+    conn.commit()
+
+
+def delete_user(user_id):
+
+    cursor.execute("""
+    DELETE FROM users
+    WHERE user_id = %s
+    """, (user_id,))
+
+    conn.commit()
 
 # FOCUS TIMER FUNCTION
 
