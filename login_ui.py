@@ -33,6 +33,7 @@ def handle_login():
     if username == "" or password == "":
         status_label.configure(text="Please fill all fields", text_color="red")
     elif username == "admin" and password == "1234": #samuel please connect this to the user database later
+        set_current_user(username)
         status_label.configure(text="Login succesfull", text_color="green")
     else:
         status_label.configure(text="your provided credentials is invalid", text_color="red")  
