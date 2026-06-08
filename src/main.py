@@ -308,21 +308,33 @@ class NexusApp(ctk.CTk):
         self.analytics_dropdown.set(subject)
         self.refresh_analytics(subject)
 
-    # ------------------------------------------
+# ------------------------------------------
     # PAGE 3: ANALYTICS & INSIGHTS
     # ------------------------------------------
     def build_analytics_page(self):
+        # 1. Filter Area
         self.filter_frame = ctk.CTkFrame(self.analytics_page, fg_color="transparent")
         self.filter_frame.pack(pady=(20, 10), fill="x", padx=40)
         
         ctk.CTkLabel(self.filter_frame, text="Viewing Analytics For:", font=("Helvetica", 16)).pack(side="left", padx=(0, 10))
-        
         self.analytics_dropdown = ctk.CTkOptionMenu(self.filter_frame, values=self.subject_list, width=300, command=self.refresh_analytics)
         self.analytics_dropdown.pack(side="left")
 
-        self.textbox_insights = ctk.CTkTextbox(self.analytics_page, height=140, font=("Helvetica", 14), fg_color="#2b2b2b")
-        self.textbox_insights.pack(fill="x", padx=40, pady=10)
+        # 2. Big Mastery Score & Grade Display
+        self.score_display_frame = ctk.CTkFrame(self.analytics_page, fg_color="#2b2b2b", corner_radius=10)
+        self.score_display_frame.pack(fill="x", padx=40, pady=10)
+        
+        self.lbl_score_text = ctk.CTkLabel(self.score_display_frame, text="Current Mastery Score:", font=("Helvetica", 18))
+        self.lbl_score_text.pack(side="left", padx=20, pady=15)
+        
+        self.lbl_grade = ctk.CTkLabel(self.score_display_frame, text="85% (Grade: A)", font=("Helvetica", 24, "bold"), text_color="#2ecc71")
+        self.lbl_grade.pack(side="right", padx=20, pady=15)
 
+        # 3. Dynamic Insights Container (Replaces the Textbox)
+        self.insights_container = ctk.CTkScrollableFrame(self.analytics_page, height=120, fg_color="#1e1e1e")
+        self.insights_container.pack(fill="x", padx=40, pady=5)
+
+        # 4. Chart Area
         self.chart_frame = ctk.CTkFrame(self.analytics_page, fg_color="#1e1e1e")
         self.chart_frame.pack(fill="both", expand=True, padx=40, pady=10)
         self.canvas_widget = None 
@@ -333,43 +345,25 @@ class NexusApp(ctk.CTk):
         fake_date_str = (datetime.now() - timedelta(days=data["days_ago"])).strftime("%Y-%m-%d")
         new_score, penalty = calculate_time_decay(data["old_score"], fake_date_str)
         
-        insights_text = get_algorithmic_insights(data["duration"], data["confidence"], penalty)
-        self.textbox_insights.configure(state="normal")
-        self.textbox_insights.delete("0.0", "end")
-        self.textbox_insights.insert("0.0", f"--- SYSTEM EVALUATION ---\n\n{insights_text}")
-        self.textbox_insights.configure(state="disabled")
+        # --- SCORE & GRADE UI ---
+        grade_letter, grade_color = get_grade(new_score)
+        self.lbl_grade.configure(text=f"{new_score}% (Grade: {grade_letter})", text_color=grade_color)
 
-        self.draw_chart(data["old_score"], new_score, penalty)
+        # --- INSIGHTS UI ---
+        for widget in self.insights_container.winfo_children():
+            widget.destroy()
 
-    def draw_chart(self, old_score, new_score, penalty):
-        if self.canvas_widget:
-            self.canvas_widget.destroy()
+        insights_data = get_algorithmic_insights(data["duration"], data["confidence"], penalty)
         
-        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(8, 3), facecolor='#1e1e1e')
-        fig.patch.set_facecolor('#1e1e1e')
+        for insight in insights_data:
+            card = ctk.CTkFrame(self.insights_container, fg_color="#2b2b2b", corner_radius=5)
+            card.pack(fill="x", pady=3)
+            
+            # The colored text
+            ctk.CTkLabel(card, text=insight["text"], text_color=insight["color"], font=("Helvetica", 14, "bold"), justify="left").pack(side="left", padx=10, pady=5)
 
-        ax1.set_facecolor('#1e1e1e')
-        bars = ax1.bar(['Original', 'Decayed'], [old_score, new_score], color=['#3498db', '#e74c3c' if penalty > 0 else '#2ecc71'], width=0.5)
-        ax1.set_ylim(0, 100)
-        ax1.tick_params(colors='white')
-        ax1.set_title("Penalty Impact", color='white')
-        for spine in ax1.spines.values(): spine.set_color('#444444')
-        for bar in bars: ax1.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 2, f"{bar.get_height()}%", ha='center', color='white', fontweight='bold')
-
-        ax2.set_facecolor('#1e1e1e')
-        future_days = np.array([0, 7, 14, 21, 28])
-        future_scores = np.maximum(new_score - (future_days / 7) * 5.0, 0)
-        ax2.plot(future_days, future_scores, color='#e67e22', marker='o', linewidth=2)
-        ax2.set_ylim(0, 100)
-        ax2.tick_params(colors='white')
-        ax2.set_title("30-Day Forgetting Curve", color='white')
-        for spine in ax2.spines.values(): spine.set_color('#444444')
-
-        plt.tight_layout()
-        canvas = FigureCanvasTkAgg(fig, master=self.chart_frame)
-        canvas.draw()
-        self.canvas_widget = canvas.get_tk_widget()
-        self.canvas_widget.pack(fill="both", expand=True)
+        # --- UPDATE CHARTS ---
+        self.draw_chart(data["old_score"], new_score, penalty)
 
 if __name__ == "__main__":
     app = NexusApp()
