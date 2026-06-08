@@ -8,7 +8,7 @@ from database import save_focus_session
 # --- MODULE IMPORTS ---
 from timer import FocusTimerWindow
 from heatmap_ui import ActivityHeatmap
-from database import save_focus)session
+from database import save_focus_session
 
 # ==========================================
 # 1. CORE MATH & ALGORITHM ENGINE
@@ -268,7 +268,7 @@ class NexusApp(ctk.CTk):
             duration,
             confidence
         )
-        self.save_to_memory_and_switch(
+        self._save_to_memory_and_switch(
             subject,
             duration,
             confidence
