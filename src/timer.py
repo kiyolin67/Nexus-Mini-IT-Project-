@@ -7,7 +7,9 @@ class FocusTimerWindow(ctk.CTkToplevel):
         self.title("Active Focus Session")
         self.geometry("450x500")
         self.configure(fg_color="#1e1e1e")
-        self.attributes('-topmost', True) # Keeps the timer above the main app!
+        self.attributes('-topmost', True)
+
+        self.protocol("WM_DELETE_WINDOW", self.stop_timer)  # Ensure timer stops if window is closed
         
         self.on_save_callback = on_save_callback
         self.subject_name = subject_name
@@ -67,7 +69,7 @@ class FocusTimerWindow(ctk.CTkToplevel):
     def save_to_db(self):
         confidence = int(self.slider_conf.get())
         
-        # Trigger the bridge function back in main.py!
+        # Trigger the bridge function back in main.py
         self.on_save_callback(self.subject_name, self.final_minutes, confidence)
         
         # Close the popup window
