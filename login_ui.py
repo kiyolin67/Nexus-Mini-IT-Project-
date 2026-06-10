@@ -1,18 +1,21 @@
 import customtkinter as ctk
 from database import set_current_user
+# Import your teammate's main application class
+from main import NexusApp 
 
 def clear_window():
     for widget in app.winfo_children():
         widget.destroy()
 
-ctk.set_appearance_mode("light")#background colour
+# Changed to dark to match your teammate's design seamlessly!
+ctk.set_appearance_mode("dark") 
 ctk.set_default_color_theme("blue")
 
 password_visible = False
 
 app = ctk.CTk()
-app.geometry("400x300")
-app.title("Login")
+app.geometry("400x420") # Adjusted slightly to comfortably fit the elements
+app.title("Nexus - Secure Login")
 
 def toggle_password():
     global password_visible
@@ -32,99 +35,85 @@ def handle_login():
 
     if username == "" or password == "":
         status_label.configure(text="Please fill all fields", text_color="red")
-    elif username == "admin" and password == "1234": #samuel please connect this to the user database later
+    elif username == "admin" and password == "1234": 
         set_current_user(username)
-        status_label.configure(text="Login succesfull", text_color="green")
+        status_label.configure(text="Login successful!", text_color="green")
+        
+        # --- THE CONNECTION LOGIC ---
+        # 1. Completely close your login window
+        app.destroy() 
+        
+        # 2. Fire up your teammate's application
+        print(f"Launching Nexus OS for {username}...")
+        main_dashboard = NexusApp()
+        main_dashboard.mainloop()
+        
     else:
-        status_label.configure(text="your provided credentials is invalid", text_color="red")  
+        status_label.configure(text="Your provided credentials are invalid", text_color="red")  
+        # Per your note: clear only password field, keep the username intact!
+        pass_entry.delete(0, 'end') 
 
 def show_login():
     clear_window()
 
     global user_entry, pass_entry, status_label, toggle_button
 
-    title = ctk.CTkLabel(app, text="Login page", font=("Arial", 20))#please double check if arial is good or should we change too different font
+    title = ctk.CTkLabel(app, text="Nexus Portal", font=("Helvetica", 24, "bold"), text_color="#3498db")
     title.pack(pady=20)
 
-    user_entry = ctk.CTkEntry(app, placeholder_text = "Username")
+    user_entry = ctk.CTkEntry(app, placeholder_text="Username", width=200)
     user_entry.pack(pady=10)
 
-    pass_entry = ctk.CTkEntry(app, placeholder_text= "Password", show="*")
+    pass_entry = ctk.CTkEntry(app, placeholder_text="Password", show="*", width=200)
     pass_entry.pack(pady=10)
 
-    toggle_button = ctk.CTkButton(app, text="Show Password", command=toggle_password)
+    toggle_button = ctk.CTkButton(app, text="Show Password", width=150, fg_color="transparent", border_width=1, command=toggle_password)
     toggle_button.pack(pady=5)
 
-    login_button = ctk.CTkButton(app, text="Login", command=handle_login)
-    login_button.pack(pady=10)
+    login_button = ctk.CTkButton(app, text="Login", width=200, fg_color="#2ecc71", hover_color="#27ae60", font=("Arial", 14, "bold"), command=handle_login)
+    login_button.pack(pady=15)
 
     status_label = ctk.CTkLabel(app, text="")
     status_label.pack()
 
-    register_button = ctk.CTkButton(app, text="Create Account", command=show_register)
-    register_button.pack(pady=5)
-
-
-
+    register_button = ctk.CTkButton(app, text="Create Account", fg_color="transparent", hover_color="#2c3e50", command=show_register)
+    register_button.pack(pady=10)
 
 def show_register():
     clear_window()
 
-    title = ctk.CTkLabel(app, text="Register", font=("Arial", 20))
+    title = ctk.CTkLabel(app, text="Register", font=("Helvetica", 20, "bold"))
     title.pack(pady=20)
 
-    user_entry = ctk.CTkEntry(app, placeholder_text="Username")
-    user_entry.pack(pady=10)
+    user_entry_reg = ctk.CTkEntry(app, placeholder_text="Username", width=200)
+    user_entry_reg.pack(pady=10)
 
-    pass_entry = ctk.CTkEntry(app, placeholder_text="Password", show="*")
-    pass_entry.pack(pady=10)
+    pass_entry_reg = ctk.CTkEntry(app, placeholder_text="Password", show="*", width=200)
+    pass_entry_reg.pack(pady=10)
 
-    confirm_entry = ctk.CTkEntry(app, placeholder_text="Confirm Password", show="*")
+    confirm_entry = ctk.CTkEntry(app, placeholder_text="Confirm Password", show="*", width=200)
     confirm_entry.pack(pady=10)
 
-    status_label = ctk.CTkLabel(app, text="")
-    status_label.pack()
+    status_label_reg = ctk.CTkLabel(app, text="")
+    status_label_reg.pack()
 
     def register_user():
-        u = user_entry.get()
-        p = pass_entry.get()
+        u = user_entry_reg.get()
+        p = pass_entry_reg.get()
         c = confirm_entry.get()
 
         if u == "" or p == "" or c == "":
-            status_label.configure(text="Fill all fields", text_color="red")
+            status_label_reg.configure(text="Fill all fields", text_color="red")
         elif p != c:
-            status_label.configure(text="Passwords do not match", text_color="red")
+            status_label_reg.configure(text="Passwords do not match", text_color="red")
         else:
-            status_label.configure(text="Registered successfully", text_color="green")
+            status_label_reg.configure(text="Registered successfully", text_color="green")
 
-    register_btn = ctk.CTkButton(app, text="Register", command=register_user)
+    register_btn = ctk.CTkButton(app, text="Register", width=200, command=register_user)
     register_btn.pack(pady=10)
 
-    back_btn = ctk.CTkButton(app, text="Back to Login", command=show_login)
+    back_btn = ctk.CTkButton(app, text="Back to Login", fg_color="transparent", command=show_login)
     back_btn.pack(pady=5)
-
 
 show_login()
 app.mainloop()
-
-
-"""
-things to add
-make 3 admin accounts
-desktop based website
-once samuel done created database have to start working on interface
-interface maybe need to change colour theme
-
-(lingesh)
-make sure to seperate the part we explain from the api 
-dont emphasis on the ai part unless its started 
-
-bila presentation 
-(sql will be stored in windows) sql is querry (which one is private which one foreign)
-
-when inputting wrong credential clear only password keep username
-open new window on success + display success/ failure window
-maybe change colour after more discussion with team members blue/white is kinda boring
-
-
-"""
