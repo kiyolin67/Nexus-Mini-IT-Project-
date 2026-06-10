@@ -6,7 +6,8 @@ import numpy as np
 
 # --- MODULE IMPORTS ---
 from timer import FocusTimerWindow
-from heatmap_ui import ActivityHeatmap
+# from heatmap_ui import ActivityHeatmap migth remove features
+from xp_dashboard import RPGDashboard
 # from database import save_focus_session, set_current_user hardcoded 
 
 # set_current_user("Lin") # HARDCODED FOR NOW, WILL IMPLEMENT PROPER LOGIN SYSTEM LATER
@@ -20,7 +21,7 @@ def calculate_time_decay(current_score, last_studied_date_str):
 
     last_studied = datetime.strptime(last_studied_date_str, "%Y-%m-%d").date()
     today = datetime.now().date()
-    days_passed = (today - last_studied).days
+    days_passed = (today - last_studied).days 
 
     if days_passed > 7:
         weeks_missed = days_passed // 7
@@ -196,10 +197,12 @@ class NexusApp(ctk.CTk):
         ctk.CTkLabel(card3, text="Subjects Tracked", font=("Helvetica", 14), text_color="gray").pack(pady=(15, 5))
         ctk.CTkLabel(card3, text=f"{len(self.subject_list)}", font=("Helvetica", 28, "bold"), text_color="#2ecc71").pack()
 
-        # PLUG IN THE HEATMAP MODULE!
-        ctk.CTkLabel(self.home_page, text="Consistency Heatmap", font=("Helvetica", 18, "bold")).pack(pady=(40, 10))
-        self.heatmap_widget = ActivityHeatmap(self.home_page)
-        self.heatmap_widget.pack(pady=10, padx=50, fill="x")
+        # XP DASHBOARD MENU 
+        ctk.CTkLabel(self.home_page, text="Progression Dashboard", font=("Helvetica", 18, "bold")).pack(pady=(40, 10))
+        
+        # fake data to start: 85 mins studied today, 120 min goal, 2350 total XP
+        self.rpg_widget = RPGDashboard(self.home_page, daily_mins_studied=85, daily_goal=120, total_xp=2350)
+        self.rpg_widget.pack(pady=10, padx=50, fill="x")
 
     # ------------------------------------------
     # PAGE 2: DATA ENTRY (Tabbed Interface)
