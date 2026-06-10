@@ -1,12 +1,15 @@
 import mysql.connector
+import os
+from dotenv import load_dotenv
 
 # AIVEN MYSQL CONNECTION
+load_dotenv()
 
 conn = mysql.connector.connect(
-    host="nexusproject-nexusproject-ac15.g.aivencloud.com",
-    port=20625,
-    user="avnadmin",
-    password="AVNS_C34T5eZzIaw4tZvS43_",
+    host=os.getenv("DB_HOST"),
+    port=int(os.getenv("DB_PORT")),
+    user=os.getenv("DB_USER"),
+    password=os.getenv("DB_PASS"),
     database="defaultdb"
 )
 

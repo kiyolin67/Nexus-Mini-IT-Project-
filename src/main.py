@@ -3,11 +3,13 @@ from datetime import datetime, timedelta
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import numpy as np
-from database import save_focus_session
 
 # --- MODULE IMPORTS ---
 from timer import FocusTimerWindow
 from heatmap_ui import ActivityHeatmap
+from database import save_focus_session, set_current_user 
+
+set_current_user("Lin") # HARDCODED FOR NOW, WILL IMPLEMENT PROPER LOGIN SYSTEM LATER
 
 # ==========================================
 # 1. CORE MATH & ALGORITHM ENGINE
