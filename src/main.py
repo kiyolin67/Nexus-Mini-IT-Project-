@@ -7,9 +7,9 @@ import numpy as np
 # --- MODULE IMPORTS ---
 from timer import FocusTimerWindow
 from heatmap_ui import ActivityHeatmap
-from database import save_focus_session, set_current_user 
+# from database import save_focus_session, set_current_user hardcoded 
 
-set_current_user("Lin") # HARDCODED FOR NOW, WILL IMPLEMENT PROPER LOGIN SYSTEM LATER
+# set_current_user("Lin") # HARDCODED FOR NOW, WILL IMPLEMENT PROPER LOGIN SYSTEM LATER
 
 # ==========================================
 # 1. CORE MATH & ALGORITHM ENGINE
@@ -277,11 +277,8 @@ class NexusApp(ctk.CTk):
             FocusTimerWindow(self, selected_subject, self.receive_timer_data)
 
     def receive_timer_data(self, subject, duration, confidence):
-        save_focus_session(
-            subject,
-            duration,
-            confidence
-        )
+        # save_focus_session(subject, duration, confidence) # HARDCODED
+
         self._save_to_memory_and_switch(
             subject,
             duration,
@@ -292,7 +289,9 @@ class NexusApp(ctk.CTk):
         subject = self.var_subject.get()
         duration = int(self.var_duration.get())
         confidence = int(self.var_confidence.get())
-        save_focus_session(subject, duration, confidence)
+
+        # save_focus_session(subject, duration, confidence) # HARDCODED
+
         self._save_to_memory_and_switch(subject, duration, confidence)
 
     def _save_to_memory_and_switch(self, subject, duration, confidence):
