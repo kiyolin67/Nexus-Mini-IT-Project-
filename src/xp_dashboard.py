@@ -63,7 +63,7 @@ class RPGDashboard(ctk.CTkFrame):
         self.info_btn = ctk.CTkButton(header_frame, text="❓", width=30, height=30, fg_color="transparent", hover_color="#444444", font=("Helvetica", 16), command=self.show_info_popup)
         self.info_btn.pack(side="left", padx=10)
 
-        ctk.CTkLabel(header_frame, text=f"Total XP: {total_xp}", font=("Helvetica", 14), text_color="gray").pack(side="right", pady=5)
+        ctk.CTkLabel(header_frame, text=f"Total XP: {total_xp}", font=("Helvetica", 26, "bold"), text_color="green").pack(side="right", pady=5)
 
         # XP Progress Bar
         self.xp_bar = ctk.CTkProgressBar(self.rpg_frame, height=20, fg_color="#1e1e1e", progress_color="#f1c40f")
