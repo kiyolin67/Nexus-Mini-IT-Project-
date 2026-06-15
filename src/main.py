@@ -147,6 +147,32 @@ class NexusApp(ctk.CTk):
         self.build_input_page()
         self.build_analytics_page()
 
+        def refresh_analytics(self, selected_subject):
+        data = self.mock_database[selected_subject]
+        
+        fake_date_str = (datetime.now() - timedelta(days=data["days_ago"])).strftime("%Y-%m-%d")
+        new_score, penalty = calculate_time_decay(data["old_score"], fake_date_str)
+        
+        # --- SCORE & GRADE UI ---
+        grade_letter, grade_color = get_grade(new_score)
+        self.lbl_grade.configure(text=f"{new_score}% (Grade: {grade_letter})", text_color=grade_color)
+
+        # --- INSIGHTS UI ---
+        for widget in self.insights_container.winfo_children():
+            widget.destroy()
+
+        insights_data = get_algorithmic_insights(data["duration"], data["confidence"], penalty)
+        
+        for insight in insights_data:
+            card = ctk.CTkFrame(self.insights_container, fg_color="#2b2b2b", corner_radius=5)
+            card.pack(fill="x", pady=3)
+            
+            # The colored text
+            ctk.CTkLabel(card, text=insight["text"], text_color=insight["color"], font=("Helvetica", 14, "bold"), justify="left").pack(side="left", padx=10, pady=5)
+
+        # --- UPDATE CHARTS ---
+        self.draw_chart(data["old_score"], new_score, penalty)
+
         # Start on the Home Dashboard
         self.show_page("home")
 
