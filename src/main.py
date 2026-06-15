@@ -147,7 +147,7 @@ class NexusApp(ctk.CTk):
         self.build_input_page()
         self.build_analytics_page()
 
-        def refresh_analytics(self, selected_subject):
+    def refresh_analytics(self, selected_subject):
         data = self.mock_database[selected_subject]
         
         fake_date_str = (datetime.now() - timedelta(days=data["days_ago"])).strftime("%Y-%m-%d")
@@ -172,9 +172,6 @@ class NexusApp(ctk.CTk):
 
         # --- UPDATE CHARTS ---
         self.draw_chart(data["old_score"], new_score, penalty)
-
-        # Start on the Home Dashboard
-        self.show_page("home")
 
     def show_page(self, page_name):
         self.home_page.grid_forget()
