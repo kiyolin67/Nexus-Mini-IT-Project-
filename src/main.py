@@ -316,12 +316,20 @@ class NexusApp(ctk.CTk):
     # PAGE 3: ANALYTICS & INSIGHTS
     # ------------------------------------------
     def build_analytics_page(self):
-        # 1. Filter Area
+       # 1. Filter Area
         self.filter_frame = ctk.CTkFrame(self.analytics_page, fg_color="transparent")
-        self.filter_frame.pack(pady=(20, 10), fill="x", padx=40)
+        self.filter_frame.pack(pady=(30, 20), fill="x", padx=40)
         
-        ctk.CTkLabel(self.filter_frame, text="Viewing Analytics For:", font=("Helvetica", 16)).pack(side="left", padx=(0, 10))
-        self.analytics_dropdown = ctk.CTkOptionMenu(self.filter_frame, values=self.subject_list, width=300, command=self.refresh_analytics)
+        ctk.CTkLabel(self.filter_frame, text="Subject:", font=("Helvetica", 20, "bold"), text_color="gray").pack(side="left", padx=(0, 15))
+        
+        self.analytics_dropdown = ctk.CTkOptionMenu(
+            self.filter_frame, 
+            values=self.subject_list, 
+            width=400, 
+            height=45, 
+            font=("Helvetica", 18, "bold"),
+            dropdown_font=("Helvetica", 14)
+        )
         self.analytics_dropdown.pack(side="left")
 
         # 2. Big Mastery Score & Grade Display
