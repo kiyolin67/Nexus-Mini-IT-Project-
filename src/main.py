@@ -313,22 +313,24 @@ class NexusApp(ctk.CTk):
         self.refresh_analytics(subject)
 
 # ------------------------------------------
-    # PAGE 3: ANALYTICS & INSIGHTS
+    # PAGE 3: ANALYTICS & INSIGHTS (UPGRADED)
     # ------------------------------------------
     def build_analytics_page(self):
-       # 1. Filter Area
+        # 1. Filter Area (Upgraded)
         self.filter_frame = ctk.CTkFrame(self.analytics_page, fg_color="transparent")
         self.filter_frame.pack(pady=(30, 20), fill="x", padx=40)
         
         ctk.CTkLabel(self.filter_frame, text="Subject:", font=("Helvetica", 20, "bold"), text_color="gray").pack(side="left", padx=(0, 15))
         
+        # Make the dropdown massive and bold so it feels like a title
         self.analytics_dropdown = ctk.CTkOptionMenu(
             self.filter_frame, 
             values=self.subject_list, 
             width=400, 
             height=45, 
             font=("Helvetica", 18, "bold"),
-            dropdown_font=("Helvetica", 14)
+            dropdown_font=("Helvetica", 14),
+            command=self.refresh_analytics
         )
         self.analytics_dropdown.pack(side="left")
 
@@ -350,42 +352,16 @@ class NexusApp(ctk.CTk):
         self.chart_frame = ctk.CTkFrame(self.analytics_page, fg_color="#1e1e1e")
         self.chart_frame.pack(fill="both", expand=True, padx=40, pady=10)
         self.canvas_widget = None 
-    
-    def refresh_analytics(self, selected_subject):
-        data = self.mock_database[selected_subject]
-        
-        fake_date_str = (datetime.now() - timedelta(days=data["days_ago"])).strftime("%Y-%m-%d")
-        new_score, penalty = calculate_time_decay(data["old_score"], fake_date_str)
-        
-        # --- SCORE & GRADE UI ---
-        grade_letter, grade_color = get_grade(new_score)
-        self.lbl_grade.configure(text=f"{new_score}% (Grade: {grade_letter})", text_color=grade_color)
-
-        # --- INSIGHTS UI ---
-        for widget in self.insights_container.winfo_children():
-            widget.destroy()
-
-        insights_data = get_algorithmic_insights(data["duration"], data["confidence"], penalty)
-        
-        for insight in insights_data:
-            card = ctk.CTkFrame(self.insights_container, fg_color="#2b2b2b", corner_radius=5)
-            card.pack(fill="x", pady=3)
-            
-            # The colored text
-            ctk.CTkLabel(card, text=insight["text"], text_color=insight["color"], font=("Helvetica", 14, "bold"), justify="left").pack(side="left", padx=10, pady=5)
-
-        # --- UPDATE CHARTS ---
-        self.draw_chart(data["old_score"], new_score, penalty)
 
     def draw_chart(self, old_score, new_score, penalty):
         if self.canvas_widget:
             self.canvas_widget.destroy()
 
-        plt.close('all') # SAVE MY DAMN MEMORY BRO I CANT LOSE ANYMORE RAM
-        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(8, 3), facecolor ="#1e1e1e")
+        plt.close('all') 
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(8, 3), facecolor="#1e1e1e")
         fig.patch.set_facecolor('#1e1e1e')
 
-        # Bar Chart
+        # Bar Chart (Upgraded)
         ax1.set_facecolor('#1e1e1e')
         bars = ax1.bar(['Peak Mastery', 'Current Recall'], [old_score, new_score], color=['#3498db', '#e74c3c' if penalty > 0 else '#2ecc71'], width=0.5)
         ax1.set_ylim(0, 100)
@@ -393,13 +369,13 @@ class NexusApp(ctk.CTk):
         ax1.set_title("Current Memory Retention", color='white', pad=15, fontsize=12, fontweight='bold')
         for spine in ax1.spines.values(): spine.set_color('#444444')
         for bar in bars: ax1.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 2, f"{bar.get_height()}%", ha='center', color='white', fontweight='bold')
-        
-        # Line Graph 
+
+        # Line Graph (Upgraded)
         ax2.set_facecolor('#1e1e1e')
         future_days = np.array([0, 7, 14, 21, 28])
         future_scores = np.maximum(new_score - (future_days / 7) * 5.0, 0)
         
-        # "Danger Zone" threshold line
+        # Add the red "Danger Zone" threshold line
         ax2.axhline(y=60, color='#e74c3c', linestyle='--', alpha=0.5, linewidth=2)
         ax2.text(2, 62, "Failing Threshold", color='#e74c3c', fontsize=9, alpha=0.8)
 
@@ -408,10 +384,13 @@ class NexusApp(ctk.CTk):
         ax2.tick_params(colors='white')
         ax2.set_title("Projected Forgetting Curve", color='white', pad=15, fontsize=12, fontweight='bold')
         ax2.set_xlabel("Days from Today", color='gray', fontsize=10)
-        
         for spine in ax2.spines.values(): spine.set_color('#444444')
 
-
+        plt.tight_layout()
+        canvas = FigureCanvasTkAgg(fig, master=self.chart_frame)
+        canvas.draw()
+        self.canvas_widget = canvas.get_tk_widget()
+        self.canvas_widget.pack(fill="both", expand=True)
 
 if __name__ == "__main__":
     app = NexusApp()
