@@ -385,30 +385,31 @@ class NexusApp(ctk.CTk):
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(8, 3), facecolor ="#1e1e1e")
         fig.patch.set_facecolor('#1e1e1e')
 
-        #Bar Chart
+        # Bar Chart
         ax1.set_facecolor('#1e1e1e')
-        bars = ax1.bar(['Original', 'Decayed'], [old_score, new_score], color=['#3498db', '#e74c3c' if penalty > 0 else '#2ecc71'], width=0.5)
+        bars = ax1.bar(['Peak Mastery', 'Current Recall'], [old_score, new_score], color=['#3498db', '#e74c3c' if penalty > 0 else '#2ecc71'], width=0.5)
         ax1.set_ylim(0, 100)
         ax1.tick_params(colors='white')
-        ax1.set_title("Penalty Impact", color='white')
+        ax1.set_title("Current Memory Retention", color='white', pad=15, fontsize=12, fontweight='bold')
         for spine in ax1.spines.values(): spine.set_color('#444444')
         for bar in bars: ax1.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 2, f"{bar.get_height()}%", ha='center', color='white', fontweight='bold')
-
-        # Line Graph
+        
+        # Line Graph 
         ax2.set_facecolor('#1e1e1e')
         future_days = np.array([0, 7, 14, 21, 28])
         future_scores = np.maximum(new_score - (future_days / 7) * 5.0, 0)
-        ax2.plot(future_days, future_scores, color='#e67e22', marker='o', linewidth=2)
+        
+        # "Danger Zone" threshold line
+        ax2.axhline(y=60, color='#e74c3c', linestyle='--', alpha=0.5, linewidth=2)
+        ax2.text(2, 62, "Failing Threshold", color='#e74c3c', fontsize=9, alpha=0.8)
+
+        ax2.plot(future_days, future_scores, color='#e67e22', marker='o', linewidth=3, markersize=8)
         ax2.set_ylim(0, 100)
         ax2.tick_params(colors='white')
-        ax2.set_title("30-Day Forgetting Curve", color='white')
+        ax2.set_title("Projected Forgetting Curve", color='white', pad=15, fontsize=12, fontweight='bold')
+        ax2.set_xlabel("Days from Today", color='gray', fontsize=10)
+        
         for spine in ax2.spines.values(): spine.set_color('#444444')
-
-        plt.tight_layout()
-        canvas = FigureCanvasTkAgg(fig, master=self.chart_frame)
-        canvas.draw()
-        self.canvas_widget = canvas.get_tk_widget()
-        self.canvas_widget.pack(fill="both", expand=True)
 
 
 
