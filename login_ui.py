@@ -1,20 +1,18 @@
 import customtkinter as ctk
 from database import set_current_user
-# Import your teammate's main application class
 from main import NexusApp 
 
 def clear_window():
     for widget in app.winfo_children():
         widget.destroy()
 
-# Changed to dark to match your teammate's design seamlessly!
 ctk.set_appearance_mode("dark") 
 ctk.set_default_color_theme("blue")
 
 password_visible = False
 
 app = ctk.CTk()
-app.geometry("400x420") # Adjusted slightly to comfortably fit the elements
+app.geometry("400x420") 
 app.title("Nexus - Secure Login")
 
 def toggle_password():
@@ -39,18 +37,14 @@ def handle_login():
         set_current_user(username)
         status_label.configure(text="Login successful!", text_color="green")
         
-        # --- THE CONNECTION LOGIC ---
-        # 1. Completely close your login window
         app.destroy() 
         
-        # 2. Fire up your teammate's application
         print(f"Launching Nexus OS for {username}...")
         main_dashboard = NexusApp()
         main_dashboard.mainloop()
         
     else:
         status_label.configure(text="Your provided credentials are invalid", text_color="red")  
-        # Per your note: clear only password field, keep the username intact!
         pass_entry.delete(0, 'end') 
 
 def show_login():
