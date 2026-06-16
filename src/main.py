@@ -228,58 +228,65 @@ class NexusApp(ctk.CTk):
         self.rpg_widget.pack(pady=10, padx=50, fill="x")
 
     # ------------------------------------------
-    # PAGE 2: DATA ENTRY (Tabbed Interface)
+    # PAGE 2: DATA ENTRY 
     # ------------------------------------------
     def build_input_page(self):
-        ctk.CTkLabel(self.input_page, text="Log Study Session", font=("Helvetica", 32, "bold")).pack(pady=(20, 10))
+        # 1. Page Header (More breathing room)
+        ctk.CTkLabel(self.input_page, text="Log Study Session", font=("Helvetica", 36, "bold")).pack(pady=(40, 20))
 
-        dropdown_frame = ctk.CTkFrame(self.input_page, fg_color="transparent")
-        dropdown_frame.pack(pady=10)
+        # 2. The "Form Card" 
+        form_card = ctk.CTkFrame(self.input_page, fg_color="#2b2b2b", corner_radius=15)
+        form_card.pack(pady=10, padx=50, fill="x")
 
-        ctk.CTkLabel(dropdown_frame, text="Program:", font=("Helvetica", 14)).grid(row=0, column=0, padx=10, pady=5, sticky="e")
+        # Container for the dropdowns to center them inside the card
+        dropdown_frame = ctk.CTkFrame(form_card, fg_color="transparent")
+        dropdown_frame.pack(pady=30)
+        ctk.CTkLabel(dropdown_frame, text="Program:", font=("Helvetica", 16)).grid(row=0, column=0, padx=20, pady=10, sticky="e")
         programs = list(MMU_COURSES.keys())
-        self.var_program = ctk.CTkOptionMenu(dropdown_frame, values=programs, width=300, command=self.update_trimesters)
-        self.var_program.grid(row=0, column=1, padx=10, pady=5)
+        self.var_program = ctk.CTkOptionMenu(dropdown_frame, values=programs, width=500, height=40, font=("Helvetica", 14), command=self.update_trimesters)
+        self.var_program.grid(row=0, column=1, padx=10, pady=10)
 
-        ctk.CTkLabel(dropdown_frame, text="Trimester:", font=("Helvetica", 14)).grid(row=1, column=0, padx=10, pady=5, sticky="e")
-        self.var_trimester = ctk.CTkOptionMenu(dropdown_frame, values=[], width=300, command=self.update_subjects)
-        self.var_trimester.grid(row=1, column=1, padx=10, pady=5)
+        ctk.CTkLabel(dropdown_frame, text="Trimester:", font=("Helvetica", 16)).grid(row=1, column=0, padx=20, pady=10, sticky="e")
+        self.var_trimester = ctk.CTkOptionMenu(dropdown_frame, values=[], width=500, height=40, font=("Helvetica", 14), command=self.update_subjects)
+        self.var_trimester.grid(row=1, column=1, padx=10, pady=10)
 
-        ctk.CTkLabel(dropdown_frame, text="Subject:", font=("Helvetica", 14)).grid(row=2, column=0, padx=10, pady=5, sticky="e")
-        self.var_subject = ctk.CTkOptionMenu(dropdown_frame, values=[], width=300)
-        self.var_subject.grid(row=2, column=1, padx=10, pady=5)
+        ctk.CTkLabel(dropdown_frame, text="Subject:", font=("Helvetica", 16)).grid(row=2, column=0, padx=20, pady=10, sticky="e")
+        self.var_subject = ctk.CTkOptionMenu(dropdown_frame, values=[], width=500, height=40, font=("Helvetica", 14))
+        self.var_subject.grid(row=2, column=1, padx=10, pady=10)
 
         self.var_program.set(programs[0])
         self.update_trimesters(programs[0])
 
-        self.log_tabs = ctk.CTkTabview(self.input_page, width=450, height=250)
-        self.log_tabs.pack(pady=20)
+        self.log_tabs = ctk.CTkTabview(self.input_page, width=700, height=350)
+        self.log_tabs.pack(pady=(20, 40))
         
         self.log_tabs.add("⏱️ Active Timer")
         self.log_tabs.add("📝 Manual Entry")
 
-        ctk.CTkLabel(self.log_tabs.tab("⏱️ Active Timer"), text="Study with the app open to track exact time.", text_color="gray").pack(pady=(20, 10))
-        ctk.CTkButton(self.log_tabs.tab("⏱️ Active Timer"), text="Launch Focus Timer", height=50, width=250, font=("Helvetica", 16, "bold"), fg_color="#3498db", hover_color="#2980b9", command=self.open_timer).pack(pady=20)
+        # Active Timer Tab
+        ctk.CTkLabel(self.log_tabs.tab("⏱️ Active Timer"), text="Study with the app open to track exact time.", font=("Helvetica", 16), text_color="gray").pack(pady=(40, 20))
+        ctk.CTkButton(self.log_tabs.tab("⏱️ Active Timer"), text="Launch Focus Timer", height=60, width=300, font=("Helvetica", 18, "bold"), fg_color="#3498db", hover_color="#2980b9", command=self.open_timer).pack(pady=20)
 
-        ctk.CTkLabel(self.log_tabs.tab("📝 Manual Entry"), text="Duration (Minutes):", font=("Helvetica", 14)).pack(pady=(10, 0))
-        self.var_duration = ctk.CTkSlider(self.log_tabs.tab("📝 Manual Entry"), from_=10, to=180, number_of_steps=34, width=300)
+        # Manual Entry Tab
+        ctk.CTkLabel(self.log_tabs.tab("📝 Manual Entry"), text="Duration (Minutes):", font=("Helvetica", 16)).pack(pady=(20, 5))
+        self.var_duration = ctk.CTkSlider(self.log_tabs.tab("📝 Manual Entry"), from_=10, to=180, number_of_steps=34, width=400)
         self.var_duration.set(60)
-        self.var_duration.pack(pady=5)
+        self.var_duration.pack(pady=10)
         
-        self.label_duration_val = ctk.CTkLabel(self.log_tabs.tab("📝 Manual Entry"), text="60 mins", text_color="#3498db", font=("Helvetica", 12, "bold"))
+        self.label_duration_val = ctk.CTkLabel(self.log_tabs.tab("📝 Manual Entry"), text="60 mins", text_color="#3498db", font=("Helvetica", 16, "bold"))
         self.label_duration_val.pack()
         self.var_duration.configure(command=lambda val: self.label_duration_val.configure(text=f"{int(val)} mins"))
 
-        ctk.CTkLabel(self.log_tabs.tab("📝 Manual Entry"), text="Confidence Level (1-5):", font=("Helvetica", 14)).pack(pady=(10, 0))
-        self.var_confidence = ctk.CTkSlider(self.log_tabs.tab("📝 Manual Entry"), from_=1, to=5, number_of_steps=4, width=300)
+        ctk.CTkLabel(self.log_tabs.tab("📝 Manual Entry"), text="Confidence Level (1-5):", font=("Helvetica", 16)).pack(pady=(20, 5))
+        self.var_confidence = ctk.CTkSlider(self.log_tabs.tab("📝 Manual Entry"), from_=1, to=5, number_of_steps=4, width=400)
         self.var_confidence.set(3)
-        self.var_confidence.pack(pady=5)
+        self.var_confidence.pack(pady=10)
 
-        self.label_conf_val = ctk.CTkLabel(self.log_tabs.tab("📝 Manual Entry"), text="Level 3", text_color="#3498db", font=("Helvetica", 12, "bold"))
+        self.label_conf_val = ctk.CTkLabel(self.log_tabs.tab("📝 Manual Entry"), text="Level 3", text_color="#3498db", font=("Helvetica", 16, "bold"))
         self.label_conf_val.pack()
         self.var_confidence.configure(command=lambda val: self.label_conf_val.configure(text=f"Level {int(val)}"))
 
-        ctk.CTkButton(self.log_tabs.tab("📝 Manual Entry"), text="Save Manual Log", height=35, width=200, fg_color="#2ecc71", hover_color="#27ae60", command=self.save_session).pack(pady=10)
+        ctk.CTkButton(self.log_tabs.tab("📝 Manual Entry"), text="Save Manual Log", height=45, width=250, font=("Helvetica", 16, "bold"), fg_color="#2ecc71", hover_color="#27ae60", command=self.save_session).pack(pady=(20, 10))
 
     # --- CONTROLLER LOGIC FOR INPUT PAGE ---
     def update_trimesters(self, selected_program):
@@ -418,3 +425,4 @@ class NexusApp(ctk.CTk):
 if __name__ == "__main__":
     app = NexusApp()
     app.mainloop()
+
