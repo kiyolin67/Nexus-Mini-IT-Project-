@@ -25,7 +25,6 @@ ADMIN_ID = "ADMIN123"
 ADMIN_PASSWORD = "00000"
 
 # TABLE CREATION
-
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS users (
     user_id VARCHAR(50) PRIMARY KEY
@@ -260,3 +259,6 @@ def close_database():
 
     conn.commit()
     conn.close()
+
+user_id = input("What is ur user name: ")
+password = input("What is ur password: ")
