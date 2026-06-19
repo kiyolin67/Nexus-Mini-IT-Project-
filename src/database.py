@@ -1,10 +1,11 @@
 import mysql.connector
 import os
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 from datetime import datetime
 
 # AIVEN MYSQL CONNECTION
-load_dotenv()
+load_dotenv(find_dotenv())
+print("Connecting to database...")
 
 conn = mysql.connector.connect(
     host=os.getenv("DB_HOST"),
@@ -29,7 +30,7 @@ ADMIN_PASSWORD = "00000"
 # TABLE CREATION
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS users (
-    user_id VARCHAR(50) PRIMARY KEY
+    user_id VARCHAR(50) PRIMARY KEY,
     password VARCHAR(255)
 )
 """)
@@ -87,13 +88,15 @@ def user_exists(user_id, password):
 
 def save_study_session(topic, duration, confidence, friction_tag):
     global CURRENT_USER
+
     if CURRENT_USER is None:
         print("No logged in user.")
         return
-today_date = datetime.now().date()
+    
+    today_date = datetime.now().date()
 
-cursor.execute("""
-    INSERT INTO tracker3 (
+    cursor.execute("""
+    INSERT INTO study_sessions (
         user_id,
         topic,
         duration,
@@ -111,8 +114,8 @@ cursor.execute("""
         today_date
     ))
 
-conn.commit()
-print(f"Session Saved -> User: {CURRENT_USER}, Topic: {topic}, Duration: {duration}, Confidence: {confidence}, Friction Tag: {friction_tag}, Date: {today_date}")
+    conn.commit()
+    print(f"Session Saved -> User: {CURRENT_USER}, Topic: {topic}, Duration: {duration}, Confidence: {confidence}, Friction Tag: {friction_tag}, Date: {today_date}")
 
 def get_user_sessions(user_id):
     cursor.execute("""
@@ -284,6 +287,3 @@ def close_database():
 
     conn.commit()
     conn.close()
-
-user_id = input("What is ur user name: ")
-password = input("What is ur password: ")
