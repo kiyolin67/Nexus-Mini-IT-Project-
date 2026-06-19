@@ -1,5 +1,5 @@
 import customtkinter as ctk
-from database import set_current_user
+import database as db
 from main import NexusApp 
 
 def clear_window():
@@ -8,6 +8,7 @@ def clear_window():
 
 ctk.set_appearance_mode("dark") 
 ctk.set_default_color_theme("blue")
+
 password_visible = False
 
 app = ctk.CTk()
@@ -32,19 +33,20 @@ def handle_login():
 
     if username == "" or password == "":
         status_label.configure(text="Please fill all fields", text_color="red")
-    elif username == "admin" and password == "1234": 
-        set_current_user(username)
-        status_label.configure(text="Login successful!", text_color="green")
-        
-        app.destroy() 
-        
-        print(f"Launching Nexus OS for {username}...")
-        main_dashboard = NexusApp()
-        main_dashboard.mainloop()
-        
     else:
-        status_label.configure(text="Your provided credentials are invalid", text_color="red")  
-        pass_entry.delete(0, 'end') 
+        user_record = db.user_exists(username, password)
+
+        if user_record:
+            db.set_current_user(username)
+            status_label.configure(text="Login successful", text_color="green")
+            app.destroy() 
+        
+            print(f"Launching Nexus OS for {username}...")
+            main_dashboard = NexusApp()
+            main_dashboard.mainloop()
+        else:
+            status_label.configure(text="Your provided credentials are invalid", text_color="red")  
+            pass_entry.delete(0, 'end') 
 
 def show_login():
     clear_window()
@@ -100,8 +102,15 @@ def show_register():
         elif p != c:
             status_label_reg.configure(text="Passwords do not match", text_color="red")
         else:
-            status_label_reg.configure(text="Registered successfully", text_color="green")
-
+            success = db.save_user(u, p)
+            if success:
+                status_label_reg.configure(text="Account created successfully", text_color="green")
+                user_entry_reg.delete(0, 'end')
+                pass_entry_reg.delete(0, 'end')
+                confirm_entry.delete(0, 'end')
+            else:
+                status_label_reg.configure(text="Username already exists", text_color="red")
+                
     register_btn = ctk.CTkButton(app, text="Register", width=200, command=register_user)
     register_btn.pack(pady=10)
 

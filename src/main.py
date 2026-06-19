@@ -113,12 +113,10 @@ class NexusApp(ctk.CTk):
         self.title("Nexus - Student Operating System")
         self.geometry("1100x750")
 
-        self.mock_database = {
-            "Mathematics I": {"duration": 60, "confidence": 4, "old_score": 85.0, "days_ago": 8, "friction_tags": []},
-            "Problem Solving and Program Design": {"duration": 120, "confidence": 2, "old_score": 60.0, "days_ago": 15, "friction_tags": ["Material Too Complex"]},
-            "Intro to Business Management": {"duration": 30, "confidence": 5, "old_score": 95.0, "days_ago": 2, "friction_tags": []}
-        }
-        self.subject_list = list(self.mock_database.keys())
+        self.mock_database = {}  # mock databse for testing
+        self.subject_list = []
+        self.sync_cloud_database()
+        
 
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=1)

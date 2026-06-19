@@ -65,13 +65,17 @@ def set_current_user(user_id):
 
 
 def save_user(user_id, password):
-
+    cursor.execute("SELECT * FROM users WHERE user_id = %s", (user_id,))
+    result = cursor.fetchone()
+    if result and result[0] > 0:
+        return False # user already exists
+        
     cursor.execute("""
-    SELECT *
-    FROM users
-    WHERE user_id = %s AND password = %s
+    INSERT INTO users (user_id, password)
+    VALUES (%s, %s)
     """, (user_id, password))
-    return cursor.fetchone()
+    conn.commit()
+    return True # user saved successfully
 
 
 def user_exists(user_id, password):
