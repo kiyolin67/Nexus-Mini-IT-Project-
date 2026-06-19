@@ -113,9 +113,9 @@ class NexusApp(ctk.CTk):
         self.geometry("1100x750")
 
         self.mock_database = {
-            "Mathematics I": {"duration": 60, "confidence": 4, "old_score": 85.0, "days_ago": 8},
-            "Problem Solving and Program Design": {"duration": 120, "confidence": 2, "old_score": 60.0, "days_ago": 15},
-            "Intro to Business Management": {"duration": 30, "confidence": 5, "old_score": 95.0, "days_ago": 2}
+            "Mathematics I": {"duration": 60, "confidence": 4, "old_score": 85.0, "days_ago": 8, "friction_tags": []},
+            "Problem Solving and Program Design": {"duration": 120, "confidence": 2, "old_score": 60.0, "days_ago": 15, "friction_tags": ["Material Too Complex"]},
+            "Intro to Business Management": {"duration": 30, "confidence": 5, "old_score": 95.0, "days_ago": 2, "friction_tags": []}
         }
         self.subject_list = list(self.mock_database.keys())
 
@@ -161,6 +161,18 @@ class NexusApp(ctk.CTk):
         for widget in self.insights_container.winfo_children():
             widget.destroy()
 
+        # friction insight
+        tags = data.get("friction_tags", [])
+        if tags:
+            latest_tag = tags[-1]
+            tag_count = tags.count(latest_tag)
+
+            friction_card = ctk.CTkFrame(self.insights_container, fg_color="#e74c3c", corner_radius=5, border_width =1, border_color="#c0392b")
+            friction_card.pack(fill="x", pady=(0,10))
+            tag_msg = f"🛑 DIAGNOSTIC: You've tagged '{latest_tag}' {tag_count} time(s) for this subject. Stop pushing blindly and address this specific roadblock."
+            ctk.CTkLabel(friction_card, text=tag_msg, text_color="#e67e22", font=("Helvetica", 14, "bold"), justify="left", wraplength=700).pack(side="left", padx=15, pady=10)
+       
+       
         insights_data = get_algorithmic_insights(data["duration"], data["confidence"], penalty)
         
         for insight in insights_data:
@@ -284,9 +296,33 @@ class NexusApp(ctk.CTk):
 
         self.label_conf_val = ctk.CTkLabel(self.log_tabs.tab("📝 Manual Entry"), text="Level 3", text_color="#3498db", font=("Helvetica", 16, "bold"))
         self.label_conf_val.pack()
-        self.var_confidence.configure(command=lambda val: self.label_conf_val.configure(text=f"Level {int(val)}"))
 
-        ctk.CTkButton(self.log_tabs.tab("📝 Manual Entry"), text="Save Manual Log", height=45, width=250, font=("Helvetica", 16, "bold"), fg_color="#2ecc71", hover_color="#27ae60", command=self.save_session).pack(pady=(20, 10))
+        # friction ui
+        self.friction_frame = ctk.CTkFrame(self.log_tabs.tab("📝 Manual Entry"), fg_color="transparent")        
+        ctk.CTkLabel(self.friction_frame, text="What was your primary roadblock?", text_color="#e74c3c", font=("Helvetica", 14, "bold")).pack(pady=(15, 5))
+        self.var_friction = ctk.CTkOptionMenu(
+            self.friction_frame, 
+            values=["Forgot Prerequisite", "Burnout/Fatigue", "Material Too Complex", "Poor Time Management"], 
+            width=300, 
+            fg_color="#c0392b", 
+            button_color="#e74c3c", 
+            button_hover_color="#c0392b"
+        )
+        self.var_friction.pack()
+        
+        self.btn_save = ctk.CTkButton(self.log_tabs.tab("📝 Manual Entry"), text="Save Manual Log", height=45, width=250, font=("Helvetica", 16, "bold"), fg_color="#2ecc71", hover_color="#27ae60", command=self.save_session)
+        self.btn_save.pack(pady=(20, 10))
+
+    def on_confidence_change(self, val):
+        conf = int(val)
+        self.label_conf_val.configure(text=f"Level {conf}")
+
+        # UI
+
+        if conf <= 2:
+            self.friction_frame.pack(before=self.btn_save, pady=10)
+        else:
+            self.friction_frame.pack_forget()
 
     # --- CONTROLLER LOGIC FOR INPUT PAGE ---
     def update_trimesters(self, selected_program):
@@ -322,18 +358,24 @@ class NexusApp(ctk.CTk):
         subject = self.var_subject.get()
         duration = int(self.var_duration.get())
         confidence = int(self.var_confidence.get())
+        friction_tag = self.var_friction.get() if confidence <= 2 else None
+        self._save_to_memory_and_switch(subject, duration, confidence, friction_tag)
 
         # save_focus_session(subject, duration, confidence) # HARDCODED
 
-        self._save_to_memory_and_switch(subject, duration, confidence)
-
-    def _save_to_memory_and_switch(self, subject, duration, confidence):
+    def _save_to_memory_and_switch(self, subject, duration, confidence, friction_tag=None):
         if subject not in self.mock_database:
             self.mock_database[subject] = {"old_score": 80.0} 
             
         self.mock_database[subject]["duration"] = duration
         self.mock_database[subject]["confidence"] = confidence
-        self.mock_database[subject]["days_ago"] = 0 
+        self.mock_database[subject]["days_ago"] = 0
+
+        if "friction_tags" not in self.mock_database[subject]:
+            self.mock_database[subject]["friction_tags"] = []
+        
+        if friction_tag:
+            self.mock_database[subject]["friction_tags"].append(friction_tag)   
         
         self.subject_list = list(self.mock_database.keys())
         self.analytics_dropdown.configure(values=self.subject_list)
