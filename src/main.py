@@ -6,6 +6,7 @@ import numpy as np
 
 # --- MODULE IMPORTS ---
 from timer import FocusTimerWindow
+import database as db
 # from heatmap_ui import ActivityHeatmap migth remove features
 from xp_dashboard import RPGDashboard
 # from database import save_focus_session, set_current_user hardcoded 

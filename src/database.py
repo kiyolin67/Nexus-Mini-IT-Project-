@@ -1,6 +1,7 @@
 import mysql.connector
 import os
 from dotenv import load_dotenv
+from datetime import datetime
 
 # AIVEN MYSQL CONNECTION
 load_dotenv()
@@ -10,7 +11,8 @@ conn = mysql.connector.connect(
     port=int(os.getenv("DB_PORT")),
     user=os.getenv("DB_USER"),
     password=os.getenv("DB_PASS"),
-    database="defaultdb"
+    database="defaultdb",
+    ssl_ca="ca.pem"
 )
 
 cursor = conn.cursor()
@@ -28,6 +30,7 @@ ADMIN_PASSWORD = "00000"
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS users (
     user_id VARCHAR(50) PRIMARY KEY
+    password VARCHAR(255)
 )
 """)
 
@@ -45,7 +48,9 @@ CREATE TABLE IF NOT EXISTS tracker3(
     user_id VARCHAR(50),
     topic VARCHAR(255),
     duration INTEGER,
-    weakness_level INTEGER
+    confidence INTEGER,
+    friction_tag VARCHAR(255),
+    date_logged DATE
 )
 """)
 
@@ -63,25 +68,9 @@ def save_user(user_id, password):
     cursor.execute("""
     SELECT *
     FROM users
-    WHERE user_id = %s
-    """, (user_id,))
-
-    existing_user = cursor.fetchone()
-
-    if not existing_user:
-
-        cursor.execute("""
-        INSERT INTO users (
-            user_id,
-            password
-        )
-        VALUES (%s, %s)
-        """, (
-            user_id,
-            password
-        ))
-
-        conn.commit()
+    WHERE user_id = %s AND password = %s
+    """, (user_id, password))
+    return cursor.fetchone()
 
 
 def user_exists(user_id, password):
@@ -89,15 +78,51 @@ def user_exists(user_id, password):
     cursor.execute("""
     SELECT *
     FROM users
-    WHERE user_id = %s
-    AND password = %s
+    WHERE user_id = %s AND password = %s
     """, (
         user_id,
         password
-    ))
-
+))
     return cursor.fetchone()
 
+def save_study_session(topic, duration, confidence, friction_tag):
+    global CURRENT_USER
+    if CURRENT_USER is None:
+        print("No logged in user.")
+        return
+today_date = datetime.now().date()
+
+cursor.execute("""
+    INSERT INTO tracker3 (
+        user_id,
+        topic,
+        duration,
+        confidence,
+        friction_tag,
+        date_logged
+    )
+    VALUES (%s, %s, %s, %s, %s, %s)
+    """, (
+        CURRENT_USER,
+        topic,
+        duration,
+        confidence,
+        friction_tag,
+        today_date
+    ))
+
+conn.commit()
+print(f"Session Saved -> User: {CURRENT_USER}, Topic: {topic}, Duration: {duration}, Confidence: {confidence}, Friction Tag: {friction_tag}, Date: {today_date}")
+
+def get_user_sessions(user_id):
+    cursor.execute("""
+    SELECT *
+    FROM study_sessions
+    WHERE user_id = %s
+    ORDER BY date_logged ASC
+    """, (user_id,))
+
+    return cursor.fetchall()
 # ADMIN FUNCTIONS
 
 def is_admin(user_id, password):
