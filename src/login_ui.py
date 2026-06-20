@@ -41,7 +41,7 @@ def handle_login():
 
         elif db.user_exists(username, password):
             db.set_current_user(username)
-            status.label.configure(text="Login successful!", text_color="green")
+            status_label.configure(text="Login successful!", text_color="green")
             app.quit()
         else:
             status_label.configure(text="Your provided credentials are invalid", text_color="red")
@@ -124,7 +124,7 @@ if db.CURRENT_USER == "ADMIN":
     print("Welcome, Admin!")
     admin_dashboard = AdminDashboard()
     admin_dashboard.mainloop()
-else:
+elif db.CURRENT_USER is not None: 
     print(f"Welcome, {db.CURRENT_USER}!")
     main_dashboard = NexusApp()
     main_dashboard.mainloop()

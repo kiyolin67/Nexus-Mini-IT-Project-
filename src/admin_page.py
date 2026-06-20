@@ -43,9 +43,11 @@ class AdminDashboard(ctk.CTk):
         else:
             for user in user_data:
                 username = user[0]
+                password = user[1]
             
                 card = ctk.CTkFrame(self.user_list_frame, fg_color="#2b2b2b", corner_radius=5)
                 card.pack(fill="x", pady=5, padx=10)
                 
-                ctk.CTkLabel(card, text=f"👤 {username}", font=("Helvetica", 16, "bold"), text_color="#3498db").pack(side="left", padx=15, pady=15)
+                ctk.CTkLabel(card, text=f" {username}", font=("Helvetica", 16, "bold"), text_color="#3498db").pack(side="left", padx=15, pady=15)
                 ctk.CTkLabel(card, text="[ Encrypted ]", text_color="gray").pack(side="right", padx=15, pady=15)
+                ctk.CTkLabel(card, text=f" {password}", text_color="yellow").pack(side="right", padx = 15, pady =15)
