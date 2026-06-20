@@ -146,6 +146,60 @@ class NexusApp(ctk.CTk):
         self.build_input_page()
         self.build_analytics_page()
 
+    def sync_cloud_database(self):
+        import database as db
+        user_sessions = db.get_user_sessions(db.CURRENT_USER)
+        self.mock_database = {}
+        self.subject_list = []
+        if not user_sessions:
+            print(f"No existing sessions found for {db.CURRENT_USER}")
+            self.mock_database["Welcome"] = {"old_score": 100, "days_ago": 0, "duration": 0, "confidence": 10, "friction_tags": []}
+            self.subject_list.append("Welcome")
+            return
+
+        print(f"Found {len(user_sessions)} sessions in cloud. Compiling...")
+        
+        for row in user_sessions:
+            topic = row[2]
+            duration = row[3]
+            confidence = row[4]
+            friction_tag = row[5]
+            date_logged = row[6]
+
+            # Calculate days ago based on the cloud timestamp
+            from datetime import datetime, date
+            if isinstance(date_logged, str):
+                try:
+                    date_obj = datetime.strptime(date_logged, "%Y-%m-%d").date()
+                except ValueError:
+                    date_obj = date.today()
+            else:
+                date_obj = date_logged
+                
+            days_ago = (date.today() - date_obj).days
+
+            # Math to convert 1-10 confidence into a standard 100% test score
+            calculated_score = int((confidence / 10) * 100)
+
+            # If this is the first time seeing this topic, create its dictionary
+            if topic not in self.mock_database:
+                self.mock_database[topic] = {
+                    "old_score": calculated_score,
+                    "days_ago": days_ago,
+                    "duration": duration,
+                    "confidence": confidence,
+                    "friction_tags": [friction_tag] if friction_tag else []
+                }
+                self.subject_list.append(topic)
+            else:
+                # update it with the newest data
+                self.mock_database[topic]["old_score"] = calculated_score
+                self.mock_database[topic]["days_ago"] = days_ago
+                self.mock_database[topic]["duration"] += duration
+                self.mock_database[topic]["confidence"] = confidence
+                if friction_tag:
+                    self.mock_database[topic]["friction_tags"].append(friction_tag)
+                                                                      
     def refresh_analytics(self, selected_subject):
         data = self.mock_database[selected_subject]
         
