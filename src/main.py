@@ -146,6 +146,8 @@ class NexusApp(ctk.CTk):
         self.build_input_page()
         self.build_analytics_page()
 
+        self.show_page("home")
+
     def sync_cloud_database(self):
         import database as db
         user_sessions = db.get_user_sessions(db.CURRENT_USER)
@@ -256,6 +258,24 @@ class NexusApp(ctk.CTk):
     # PAGE 1: HOME DASHBOARD (NEW)
     # ------------------------------------------
     def build_home_page(self):
+        # --- DYNAMIC DATA CALCULATIONS ---
+        # 1. Total Study Hours
+        total_minutes = sum(data.get("duration", 0) for data in self.mock_database.values())
+        total_hours = round(total_minutes / 60, 1)
+
+        # 2. Subjects Tracked
+        active_subjects = [sub for sub in self.subject_list if sub != "Welcome"]
+        total_subjects = len(active_subjects)
+
+        # 3. Gamification Stats
+        total_xp = total_minutes * 10  # 10 XP per minute studied
+        
+        # Calculate today's minutes
+        today_mins = sum(data.get("duration", 0) for data in self.mock_database.values() if data.get("days_ago", -1) == 0)
+
+        # 4. Current Streak (Simplified: 1 if studied today, else 0)
+        streak = 1 if today_mins > 0 else 0
+        
         # Welcome Banner
         ctk.CTkLabel(self.home_page, text="Welcome back, Scholar.", font=("Helvetica", 32, "bold")).pack(pady=(40, 10))
         ctk.CTkLabel(self.home_page, text="Here is your study overview for this month.", font=("Helvetica", 16), text_color="gray").pack(pady=(0, 30))
@@ -269,29 +289,27 @@ class NexusApp(ctk.CTk):
         card1.pack(side="left", expand=True, padx=10)
         card1.pack_propagate(False)
         ctk.CTkLabel(card1, text="Total Study Hours", font=("Helvetica", 14), text_color="gray").pack(pady=(15, 5))
-        ctk.CTkLabel(card1, text="32.5 hrs", font=("Helvetica", 28, "bold"), text_color="#3498db").pack()
+        ctk.CTkLabel(card1, text=f"{total_hours} hrs", font=("Helvetica", 28, "bold"), text_color="#3498db").pack()
 
         # Metric 2: Current Streak
         card2 = ctk.CTkFrame(metrics_frame, fg_color="#2b2b2b", corner_radius=15, width=200, height=100)
         card2.pack(side="left", expand=True, padx=10)
         card2.pack_propagate(False)
         ctk.CTkLabel(card2, text="Current Streak", font=("Helvetica", 14), text_color="gray").pack(pady=(15, 5))
-        ctk.CTkLabel(card2, text="4 Days 🔥", font=("Helvetica", 28, "bold"), text_color="#e67e22").pack()
+        ctk.CTkLabel(card2, text=f"{streak} Days 🔥", font=("Helvetica", 28, "bold"), text_color="#e67e22").pack()
 
         # Metric 3: Subjects Tracked
         card3 = ctk.CTkFrame(metrics_frame, fg_color="#2b2b2b", corner_radius=15, width=200, height=100)
         card3.pack(side="left", expand=True, padx=10)
         card3.pack_propagate(False)
         ctk.CTkLabel(card3, text="Subjects Tracked", font=("Helvetica", 14), text_color="gray").pack(pady=(15, 5))
-        ctk.CTkLabel(card3, text=f"{len(self.subject_list)}", font=("Helvetica", 28, "bold"), text_color="#2ecc71").pack()
+        ctk.CTkLabel(card3, text=f"{total_subjects}", font=("Helvetica", 28, "bold"), text_color="#2ecc71").pack()
 
         # XP DASHBOARD MENU 
         ctk.CTkLabel(self.home_page, text="Progression Dashboard", font=("Helvetica", 18, "bold")).pack(pady=(40, 10))
         
-        # fake data to start: 85 mins studied today, 120 min goal, 2350 total XP
-        self.rpg_widget = RPGDashboard(self.home_page, daily_mins_studied=85, daily_goal=120, total_xp=2350)
+        self.rpg_widget = RPGDashboard(self.home_page, daily_mins_studied=today_mins, daily_goal=120, total_xp=total_xp)
         self.rpg_widget.pack(pady=10, padx=50, fill="x")
-
     # ------------------------------------------
     # PAGE 2: DATA ENTRY 
     # ------------------------------------------
@@ -444,7 +462,7 @@ class NexusApp(ctk.CTk):
         # 1. Filter Area (Upgraded)
         self.filter_frame = ctk.CTkFrame(self.analytics_page, fg_color="transparent")
         self.filter_frame.pack(pady=(30, 20), fill="x", padx=40)
-        
+        def bu
         ctk.CTkLabel(self.filter_frame, text="Subject:", font=("Helvetica", 20, "bold"), text_color="gray").pack(side="left", padx=(0, 15))
         
         # Make the dropdown massive and bold so it feels like a title
