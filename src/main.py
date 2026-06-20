@@ -111,7 +111,7 @@ class NexusApp(ctk.CTk):
         super().__init__()
 
         self.title("Nexus - Student Operating System")
-        self.geometry("1100x750")
+        self.geometry("1100x850")
 
         self.mock_database = {}  # mock databse for testing
         self.subject_list = []
@@ -203,6 +203,20 @@ class NexusApp(ctk.CTk):
                     self.mock_database[topic]["friction_tags"].append(friction_tag)
                                                                       
     def refresh_analytics(self, selected_subject):
+        if selected_subject == "Welcome":
+            self.lbl_score_text.configure(text="Welcome to Nexus Analytics")
+            self.lbl_grade.configure(text="Awaiting Data...", text_color="gray")
+
+            for widget in self.insights_container.winfo_children():
+                widget.destroy()
+            
+            ctk.CTkLabel(self.insights_container, text="Head Over to 'Log Study Sessions To Start", font=("Helvetica", 14), text_color="silver"
+            ).pack(pady=40)
+            if self.canvas_widget:
+                self.canvas_widget.destroy()
+                self.canvas_widget = None
+            return
+        
         data = self.mock_database[selected_subject]
         
         fake_date_str = (datetime.now() - timedelta(days=data["days_ago"])).strftime("%Y-%m-%d")
@@ -340,7 +354,7 @@ class NexusApp(ctk.CTk):
         self.var_program.set(programs[0])
         self.update_trimesters(programs[0])
 
-        self.log_tabs = ctk.CTkTabview(self.input_page, width=700, height=350)
+        self.log_tabs = ctk.CTkTabview(self.input_page, width=700, height=500)
         self.log_tabs.pack(pady=(20, 40))
         
         self.log_tabs.add("⏱️ Active Timer")
@@ -351,25 +365,32 @@ class NexusApp(ctk.CTk):
         ctk.CTkButton(self.log_tabs.tab("⏱️ Active Timer"), text="Launch Focus Timer", height=60, width=300, font=("Helvetica", 18, "bold"), fg_color="#3498db", hover_color="#2980b9", command=self.open_timer).pack(pady=20)
 
         # Manual Entry Tab
-        ctk.CTkLabel(self.log_tabs.tab("📝 Manual Entry"), text="Duration (Minutes):", font=("Helvetica", 16)).pack(pady=(20, 5))
-        self.var_duration = ctk.CTkSlider(self.log_tabs.tab("📝 Manual Entry"), from_=10, to=180, number_of_steps=34, width=400)
+        # ----------------------------------------
+        # Manual Entry Tab (SCROLLABLE UPGRADE)
+        # ----------------------------------------
+        self.manual_container = ctk.CTkScrollableFrame(self.log_tabs.tab("📝 Manual Entry"), fg_color="transparent")
+        self.manual_container.pack(fill="both", expand=True)
+
+        ctk.CTkLabel(self.manual_container, text="Duration (Minutes):", font=("Helvetica", 16)).pack(pady=(10, 5))
+        self.var_duration = ctk.CTkSlider(self.manual_container, from_=10, to=180, number_of_steps=34, width=400)
         self.var_duration.set(60)
         self.var_duration.pack(pady=10)
         
-        self.label_duration_val = ctk.CTkLabel(self.log_tabs.tab("📝 Manual Entry"), text="60 mins", text_color="#3498db", font=("Helvetica", 16, "bold"))
+        self.label_duration_val = ctk.CTkLabel(self.manual_container, text="60 mins", text_color="#3498db", font=("Helvetica", 16, "bold"))
         self.label_duration_val.pack()
         self.var_duration.configure(command=lambda val: self.label_duration_val.configure(text=f"{int(val)} mins"))
 
-        ctk.CTkLabel(self.log_tabs.tab("📝 Manual Entry"), text="Confidence Level (1-5):", font=("Helvetica", 16)).pack(pady=(20, 5))
-        self.var_confidence = ctk.CTkSlider(self.log_tabs.tab("📝 Manual Entry"), from_=1, to=5, number_of_steps=4, width=400)
+        ctk.CTkLabel(self.manual_container, text="Confidence Level (1-5):", font=("Helvetica", 16)).pack(pady=(20, 5))
+        
+        self.var_confidence = ctk.CTkSlider(self.manual_container, from_=1, to=5, number_of_steps=4, width=400, command=self.on_confidence_change)
         self.var_confidence.set(3)
         self.var_confidence.pack(pady=10)
 
-        self.label_conf_val = ctk.CTkLabel(self.log_tabs.tab("📝 Manual Entry"), text="Level 3", text_color="#3498db", font=("Helvetica", 16, "bold"))
+        self.label_conf_val = ctk.CTkLabel(self.manual_container, text="Level 3", text_color="#3498db", font=("Helvetica", 16, "bold"))
         self.label_conf_val.pack()
 
-        # friction ui
-        self.friction_frame = ctk.CTkFrame(self.log_tabs.tab("📝 Manual Entry"), fg_color="transparent")        
+        # Friction UI
+        self.friction_frame = ctk.CTkFrame(self.manual_container, fg_color="transparent")        
         ctk.CTkLabel(self.friction_frame, text="What was your primary roadblock?", text_color="#e74c3c", font=("Helvetica", 14, "bold")).pack(pady=(15, 5))
         self.var_friction = ctk.CTkOptionMenu(
             self.friction_frame, 
@@ -381,15 +402,13 @@ class NexusApp(ctk.CTk):
         )
         self.var_friction.pack()
         
-        self.btn_save = ctk.CTkButton(self.log_tabs.tab("📝 Manual Entry"), text="Save Manual Log", height=45, width=250, font=("Helvetica", 16, "bold"), fg_color="#2ecc71", hover_color="#27ae60", command=self.save_session)
+        self.btn_save = ctk.CTkButton(self.manual_container, text="Save Manual Log", height=45, width=250, font=("Helvetica", 16, "bold"), fg_color="#2ecc71", hover_color="#27ae60", command=self.save_session)
         self.btn_save.pack(pady=(20, 10))
-
+    
     def on_confidence_change(self, val):
         conf = int(val)
-        self.label_conf_val.configure(text=f"Level {conf}")
-
-        # UI
-
+        self.lavel_conf_val.configure(text=f"Level {conf}")
+        
         if conf <= 2:
             self.friction_frame.pack(before=self.btn_save, pady=10)
         else:
@@ -462,7 +481,6 @@ class NexusApp(ctk.CTk):
         # 1. Filter Area (Upgraded)
         self.filter_frame = ctk.CTkFrame(self.analytics_page, fg_color="transparent")
         self.filter_frame.pack(pady=(30, 20), fill="x", padx=40)
-        def bu
         ctk.CTkLabel(self.filter_frame, text="Subject:", font=("Helvetica", 20, "bold"), text_color="gray").pack(side="left", padx=(0, 15))
         
         # Make the dropdown massive and bold so it feels like a title
