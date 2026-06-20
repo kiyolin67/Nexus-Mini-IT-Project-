@@ -38,12 +38,8 @@ def handle_login():
 
         if user_record:
             db.set_current_user(username)
-            status_label.configure(text="Login successful", text_color="green")
-            app.destroy() 
-        
-            print(f"Launching Nexus OS for {username}...")
-            main_dashboard = NexusApp()
-            main_dashboard.mainloop()
+            status_label.configure(text="Login successful!", text_color="green")
+            app.quit()
         else:
             status_label.configure(text="Your provided credentials are invalid", text_color="red")  
             pass_entry.delete(0, 'end') 
