@@ -1,6 +1,7 @@
 import customtkinter as ctk
 import database as db
 from main import NexusApp 
+from admin_page import AdminDashboard
 
 def clear_window():
     for widget in app.winfo_children():
@@ -34,15 +35,17 @@ def handle_login():
     if username == "" or password == "":
         status_label.configure(text="Please fill all fields", text_color="red")
     else:
-        user_record = db.user_exists(username, password)
+        if db.is_admin(username, password):
+            db.set_current_user("ADMIN")
+            app.quit()
 
-        if user_record:
+        elif db.user_exists(username, password):
             db.set_current_user(username)
-            status_label.configure(text="Login successful!", text_color="green")
+            status.label.configure(text="Login successful!", text_color="green")
             app.quit()
         else:
-            status_label.configure(text="Your provided credentials are invalid", text_color="red")  
-            pass_entry.delete(0, 'end') 
+            status_label.configure(text="Your provided credentials are invalid", text_color="red")
+            pass_entry.delete(0, 'end')
 
 def show_login():
     clear_window()
@@ -115,3 +118,14 @@ def show_register():
 
 show_login()
 app.mainloop()
+app.destroy()
+
+if db.CURRENT_USER == "ADMIN":
+    print("Welcome, Admin!")
+    admin_dashboard = AdminDashboard()
+    admin_dashboard.mainloop()
+else:
+    print(f"Welcome, {db.CURRENT_USER}!")
+    main_dashboard = NexusApp()
+    main_dashboard.mainloop()
+    
