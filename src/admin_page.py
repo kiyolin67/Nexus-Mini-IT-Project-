@@ -11,7 +11,7 @@ class AdminDashboard(ctk.CTk):
         ctk.CTkLabel(self, text="Welcome, Admin!", font=("Helvetica", 18), text_color="#2ecc71").pack(pady=10)
 
         # Search Bar 
-        self.search_var = ctk.StringVar
+        self.search_var = ctk.StringVar(master=self)
         self.search_entry = ctk.CTkEntry(
             self,
             placeholder_text="Search users...",
@@ -27,7 +27,7 @@ class AdminDashboard(ctk.CTk):
         self.user_list_frame.pack(pady=10)
 
         self.all_users = db.get_all_users()
-        self.populate_user_list(self.all_users)
+        self.populate_list(self.all_users)
 
     def filter_users(self, event):
         search_query = self.search_var.get().lower()
