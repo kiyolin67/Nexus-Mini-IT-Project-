@@ -131,11 +131,21 @@ class NexusApp(ctk.CTk):
         self.btn_nav_home = ctk.CTkButton(self.sidebar_frame, text="🏠 Home Dashboard", command=lambda: self.show_page("home"), fg_color="transparent", border_width=1, hover_color="#2c3e50")
         self.btn_nav_home.pack(pady=10, padx=20, fill="x")
 
+        # Log study sessions
         self.btn_nav_input = ctk.CTkButton(self.sidebar_frame, text="📝 Log Study Session", command=lambda: self.show_page("input"), fg_color="transparent", border_width=1, hover_color="#2c3e50")
         self.btn_nav_input.pack(pady=10, padx=20, fill="x")
 
+        # Analytics
         self.btn_nav_analytics = ctk.CTkButton(self.sidebar_frame, text="📊 View Analytics", command=lambda: self.show_page("analytics"), fg_color="transparent", border_width=1, hover_color="#2c3e50")
         self.btn_nav_analytics.pack(pady=10, padx=20, fill="x")
+
+        # Task button
+        self.btn_add_task = ctk.CTkButton(
+            self.sidebar_frame,
+            text="➕ Add Deadline",
+            font=("Helvetica", 16, "bold"),
+        )
+        self.btn_add_task.pack(pady=10, padx=20)
 
         # --- PAGE CONTAINERS ---
         self.home_page = ctk.CTkFrame(self, corner_radius=10, fg_color="#1e1e1e")
@@ -254,20 +264,80 @@ class NexusApp(ctk.CTk):
         # --- UPDATE CHARTS ---
         self.draw_chart(data["old_score"], new_score, penalty)
 
+    def open_add_task_modal(self):
+        import database as db
+        
+        
+        modal = ctk.CTkToplevel(self)
+        modal.title("New Deadline")
+        modal.geometry("400x350")
+        modal.attributes("-topmost", True)
+        
+        ctk.CTkLabel(modal, text="Create Action Item", font=("Helvetica", 20, "bold")).pack(pady=(20, 10))
+
+        # 1. Task Name Input
+        entry_task = ctk.CTkEntry(modal, placeholder_text="e.g., Calculus Assignment", width=300)
+        entry_task.pack(pady=10)
+
+        # 2. Due Date Input
+        entry_date = ctk.CTkEntry(modal, placeholder_text="e.g., Tomorrow, Friday, Oct 12", width=300)
+        entry_date.pack(pady=10)
+
+        # 3. Urgency Toggle
+        var_urgent = ctk.BooleanVar(value=False)
+        switch_urgent = ctk.CTkSwitch(
+            modal, 
+            text="Mark as Urgent (Red)", 
+            variable=var_urgent, 
+            font=("Helvetica", 14),
+            progress_color="#e74c3c" 
+        )
+        switch_urgent.pack(pady=20)
+
+        # 4. Save Logic
+        def save_and_close():
+            task = entry_task.get()
+            date = entry_date.get()
+            urgent = var_urgent.get()
+            
+            if task and date: 
+                db.add_deadline(db.CURRENT_USER, task, date, urgent)
+                modal.destroy()
+                
+                # Refresh the dashboard 
+                self.show_page("home") 
+
+        # 5. Save Button
+        btn_save = ctk.CTkButton(modal, text="Save to Queue", fg_color="#3498db", hover_color="#2980b9", command=save_and_close)
+        btn_save.pack(pady=10)
+
     def show_page(self, page_name):
         self.home_page.grid_forget()
         self.input_page.grid_forget()
         self.analytics_page.grid_forget()
 
         if page_name == "home":
+            for widget in self.home_page.winfo_children():
+                widget.destroy()
+            self.build_home_page()
+            
+            # Display the page
             self.home_page.grid(row=0, column=1, sticky="nsew", padx=20, pady=20)
+            
         elif page_name == "input":
             self.input_page.grid(row=0, column=1, sticky="nsew", padx=20, pady=20)
+            
         elif page_name == "analytics":
             self.analytics_page.grid(row=0, column=1, sticky="nsew", padx=20, pady=20)
-            self.analytics_dropdown.set(self.subject_list[0])
-            self.refresh_analytics(self.subject_list[0]) 
+            
+            if self.subject_list:
+                self.analytics_dropdown.set(self.subject_list[0])
+                self.refresh_analytics(self.subject_list[0])
 
+    def complete_deadline(self, task_name, card_widget):
+        import database as db
+        db.delete_deadline(db.CURRENT_USER, task_name)
+        card_widget.destroy()
     # ------------------------------------------
     # PAGE 1: HOME DASHBOARD (NEW)
     # ------------------------------------------
@@ -356,8 +426,10 @@ class NexusApp(ctk.CTk):
                     fg_color="#2ecc71", 
                     hover_color="#27ae60", 
                     checkbox_height=20, 
-                    checkbox_width=20
-                )
+                    checkbox_width=20,
+                    command=lambda t=task_name, c=card: self.complete_deadline(t, c)
+                 )
+
                 cb.pack(side="left", padx=15, pady=10)
                 
                 date_color = "#e74c3c" if is_urgent else "gray"
@@ -445,12 +517,14 @@ class NexusApp(ctk.CTk):
     
     def on_confidence_change(self, val):
         conf = int(val)
-        self.lavel_conf_val.configure(text=f"Level {conf}")
+        self.lab_conf_val.configure(text=f"Level {conf}")
         
         if conf <= 2:
-            self.friction_frame.pack(before=self.btn_save, pady=10)
+            self.btn_save.pack_forget()
+            self.friction_frame.pack(pady=10)
+            self.btn_save.pack(pady=(20,10))
         else:
-            self.friction_frame.pack_forget()
+            self.friciton_frame.pack_forget()
 
     # --- CONTROLLER LOGIC FOR INPUT PAGE ---
     def update_trimesters(self, selected_program):
@@ -492,8 +566,10 @@ class NexusApp(ctk.CTk):
         # save_focus_session(subject, duration, confidence) # HARDCODED
 
     def _save_to_memory_and_switch(self, subject, duration, confidence, friction_tag=None):
+        calculated_score = (confidence / 5.0) * 100
+
         if subject not in self.mock_database:
-            self.mock_database[subject] = {"old_score": 80.0} 
+            self.mock_database[subject] = {"old_score": calculated_score} 
             
         self.mock_database[subject]["duration"] = duration
         self.mock_database[subject]["confidence"] = confidence

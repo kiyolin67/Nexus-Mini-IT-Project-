@@ -288,7 +288,7 @@ def delete_session(record_id):
 
 def get_user_deadlines(username):
     try:
-        query = "SELECT task_name, due_date,, is_urgent FROM deadlines WHERE username = %s ORDER BY is_urgent DESC"
+        query = "SELECT task_name, due_date, is_urgent FROM deadlines WHERE username = %s ORDER BY is_urgent DESC"         
         cursor.execute(query, (username,))
         results = cursor.fetchall()
 
@@ -296,7 +296,25 @@ def get_user_deadlines(username):
         print(f"Error fetching deadlines: {e}")
         return[]
 
+def delete_deadline(username, task_name):
+    try:
+        query = "DELETE FROM deadlines WHERE username = %s AND task_name = %s"
+        cursor.execute(query, (username, task_name))
+        conn.commit() # to save into cloud properly
+        print(f"Task '{task_name}' successfully deleted.")
 
+    except Exception as e:
+        print(f"Error deleting deadline: {e}")
+
+def add_deadline(username, task_name, due_date, is_urgent):
+    try:
+        urgent_flag = 1 if is_urgent else 0
+        query = "INSERT INTO deadlines (username, task_name, due_date, is_urgent) VALUES (%s, %s, %s, %s)"
+        cursor.execute(query, (username, task_name, due_date, urgent_flag))
+        conn.commit()
+        print(f"Task '{task_name}' successfully added to cloud")
+    except Exception as e:
+        print(f"Error adding deadline: {e}")
 # DATABASE CLEANUP
 
 def close_database():
