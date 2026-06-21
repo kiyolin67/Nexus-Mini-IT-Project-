@@ -324,6 +324,44 @@ class NexusApp(ctk.CTk):
         
         self.rpg_widget = RPGDashboard(self.home_page, daily_mins_studied=today_mins, daily_goal=120, total_xp=total_xp)
         self.rpg_widget.pack(pady=10, padx=50, fill="x")
+
+        # CHECKLIST 
+
+        ctk.CTkLabel(self.home_page, text="Action Items & Deadlines", font=("Helvetica", 18, "bold")).pack(pady=(30, 10))
+
+        self.deadline_frame = ctk.CTkScrollableFrame(self.home_page, fg_color="transparent", height=150)
+        self.deadline_frame.pack(pady=0, padx=50, fill="x")
+
+        # 1. Fetch real data from your Aiven database
+        real_deadlines = db.get_user_deadlines(db.CURRENT_USER)
+
+        # 2. Handle the Empty State gracefully
+        if not real_deadlines:
+             ctk.CTkLabel(self.deadline_frame, text="No upcoming deadlines found in database. You're all caught up!", font=("Helvetica", 14), text_color="gray").pack(pady=30)
+        else:
+            # 3. Dynamically build the UI from the database rows
+            for row in real_deadlines:
+                task_name = row[0]
+                due_date = row[1]
+                is_urgent = bool(row[2]) # Converts MySQL's 1 or 0 into True or False
+
+                card = ctk.CTkFrame(self.deadline_frame, fg_color="#2b2b2b", corner_radius=8)
+                card.pack(fill="x", pady=5, padx=5)
+                
+                cb = ctk.CTkCheckBox(
+                    card, 
+                    text=task_name, 
+                    font=("Helvetica", 14), 
+                    text_color="white", 
+                    fg_color="#2ecc71", 
+                    hover_color="#27ae60", 
+                    checkbox_height=20, 
+                    checkbox_width=20
+                )
+                cb.pack(side="left", padx=15, pady=10)
+                
+                date_color = "#e74c3c" if is_urgent else "gray"
+                ctk.CTkLabel(card, text=due_date, font=("Helvetica", 12, "bold"), text_color=date_color).pack(side="right", padx=15)
     # ------------------------------------------
     # PAGE 2: DATA ENTRY 
     # ------------------------------------------

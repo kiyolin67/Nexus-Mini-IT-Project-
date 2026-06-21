@@ -285,6 +285,18 @@ def delete_session(record_id):
 
     conn.commit()
 
+
+def get_user_deadlines(username):
+    try:
+        query = "SELECT task_name, due_date,, is_urgent FROM deadlines WHERE username = %s ORDER BY is_urgent DESC"
+        cursor.execute(query, (username,))
+        results = cursor.fetchall()
+
+    except Exception as e:
+        print(f"Error fetching deadlines: {e}")
+        return[]
+
+
 # DATABASE CLEANUP
 
 def close_database():
