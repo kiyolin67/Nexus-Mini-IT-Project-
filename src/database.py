@@ -315,6 +315,19 @@ def add_deadline(username, task_name, due_date, is_urgent):
         print(f"Task '{task_name}' successfully added to cloud")
     except Exception as e:
         print(f"Error adding deadline: {e}")
+
+# REMINDER 
+
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS deadlines (
+    id INTEGER PRIMARY KEY AUTO_INCREMENT,
+    username VARCHAR(50),
+    task_name VARCHAR(255),
+    due_date VARCHAR(100),
+    is_urgent BOOLEAN
+)
+""")
+conn.commit()
 # DATABASE CLEANUP
 
 def close_database():

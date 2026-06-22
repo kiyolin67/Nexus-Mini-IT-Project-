@@ -110,6 +110,8 @@ class NexusApp(ctk.CTk):
     def __init__(self):
         super().__init__()
 
+        self.has_shown_reminders = False # one time trigger for user
+
         self.title("Nexus - Student Operating System")
         self.geometry("1100x850")
 
@@ -142,8 +144,11 @@ class NexusApp(ctk.CTk):
         # Task button
         self.btn_add_task = ctk.CTkButton(
             self.sidebar_frame,
-            text="➕ Add Deadline",
-            font=("Helvetica", 16, "bold"),
+            text="➕ Add Reminder", 
+            command=lambda: self.show_page("reminder"),
+            fg_color="transparent",
+            border_width=1,
+            hover_color="#2c3e50",
         )
         self.btn_add_task.pack(pady=10, padx=20)
 
@@ -151,6 +156,7 @@ class NexusApp(ctk.CTk):
         self.home_page = ctk.CTkFrame(self, corner_radius=10, fg_color="#1e1e1e")
         self.input_page = ctk.CTkFrame(self, corner_radius=10, fg_color="#1e1e1e")
         self.analytics_page = ctk.CTkFrame(self, corner_radius=10, fg_color="#1e1e1e")
+        self.reminder_page = ctk.CTkFrame(self, corner_radius=10, fg_color="#1e1e1e")
 
         self.build_home_page()
         self.build_input_page()
@@ -315,11 +321,16 @@ class NexusApp(ctk.CTk):
         self.home_page.grid_forget()
         self.input_page.grid_forget()
         self.analytics_page.grid_forget()
+        self.reminder_page.grid_forget()
 
         if page_name == "home":
             for widget in self.home_page.winfo_children():
                 widget.destroy()
             self.build_home_page()
+
+            if not self.has_shown_reminders:
+                self.check_urgent_reminders()
+                self.has_shown_reminders = True
             
             # Display the page
             self.home_page.grid(row=0, column=1, sticky="nsew", padx=20, pady=20)
@@ -333,6 +344,12 @@ class NexusApp(ctk.CTk):
             if self.subject_list:
                 self.analytics_dropdown.set(self.subject_list[0])
                 self.refresh_analytics(self.subject_list[0])
+        
+        elif page_name == "reminder":
+            for widget in self.reminder_page.winfo_children():
+                widget.destroy() # clear old data
+            self.build_reminder_page()
+            self.reminder_page.grid(row=0, column=1, sticky="nsew", padx=20, pady=20)
 
     def complete_deadline(self, task_name, card_widget):
         import database as db
@@ -474,10 +491,9 @@ class NexusApp(ctk.CTk):
         ctk.CTkLabel(self.log_tabs.tab("⏱️ Active Timer"), text="Study with the app open to track exact time.", font=("Helvetica", 16), text_color="gray").pack(pady=(40, 20))
         ctk.CTkButton(self.log_tabs.tab("⏱️ Active Timer"), text="Launch Focus Timer", height=60, width=300, font=("Helvetica", 18, "bold"), fg_color="#3498db", hover_color="#2980b9", command=self.open_timer).pack(pady=20)
 
-        # Manual Entry Tab
-        # ----------------------------------------
-        # Manual Entry Tab (SCROLLABLE UPGRADE)
-        # ----------------------------------------
+        ########################
+        # Manual Entry Tab 
+        ########################
         self.manual_container = ctk.CTkScrollableFrame(self.log_tabs.tab("📝 Manual Entry"), fg_color="transparent")
         self.manual_container.pack(fill="both", expand=True)
 
@@ -667,6 +683,84 @@ class NexusApp(ctk.CTk):
         self.canvas_widget = canvas.get_tk_widget()
         self.canvas_widget.pack(fill="both", expand=True)
 
+        # REMINDER APP
+
+    def check_urgent_reminders(self):
+        import database as db
+
+        if not db.CURRENT_USER:
+            return
+            
+        deadlines = db.get_user_deadlines(db.CURRENT_USER)
+        
+        if not deadlines:
+            return
+            
+        urgent_tasks = [row[0] for row in deadlines if len(row) >= 3 and bool(row[2]) == True]
+
+        if urgent_tasks:
+            self.show_reminder_popup(urgent_tasks)
+
+    def show_reminder_popup(self, urgent_tasks):
+        alert = ctk.CTkToplevel(self)
+        alert.title("⚠️ Urgent Deadlines")
+        alert.geometry("350x250")
+        alert.attributes("-topmost", True) # keep in front of main window lowkirk
+
+        ctk.CTkLabel(alert, text="Action Required!", font=("Helvetica", 18, "bold"), text_color="#e74c3c").pack(pady=(20, 10))
+        ctk.CTkLabel(alert, text="You have urgent tasks pending:", font=("Helvetica", 14)).pack(pady=5)
+        
+        # Dynamically list out the urgent tasks
+        for task in urgent_tasks:
+            ctk.CTkLabel(alert, text=f"• {task}", font=("Helvetica", 14, "bold")).pack(pady=2)
+            
+        # The dismissal button
+        ctk.CTkButton(alert, text="Got it", fg_color="#2ecc71", hover_color="#27ae60", command=alert.destroy).pack(pady=(20, 10))
+
+    def build_reminder_page(self):
+        import database as db
+
+        ctk.CTkLabel(self.reminder_page, text="Create Action Item", font=("Helvetica", 28, "bold")).pack(pady=(40, 20))
+
+        # 1. Inputs
+        entry_task = ctk.CTkEntry(self.reminder_page, placeholder_text="e.g., Calculus Assignment", width=400, height=40)
+        entry_task.pack(pady=10)
+
+        entry_date = ctk.CTkEntry(self.reminder_page, placeholder_text="e.g., Tomorrow, Friday, Oct 12", width=400, height=40)
+        entry_date.pack(pady=10)
+
+        # 2. Urgency Toggle
+        var_urgent = ctk.BooleanVar(value=False)
+        switch_urgent = ctk.CTkSwitch(
+            self.reminder_page, 
+            text="Mark as Urgent (Red)", 
+            variable=var_urgent, 
+            font=("Helvetica", 14),
+            progress_color="#e74c3c"
+        )
+        switch_urgent.pack(pady=30)
+
+        # 3. Save Logic
+        def save_and_redirect():
+            task = entry_task.get()
+            date = entry_date.get()
+            urgent = var_urgent.get()
+            
+            if task and date:
+                db.add_deadline(db.CURRENT_USER, task, date, urgent)
+                self.show_page("home")
+
+        # 4. Save Button
+        ctk.CTkButton(
+            self.reminder_page, 
+            text="Save to Queue", 
+            font=("Helvetica", 16, "bold"),
+            fg_color="#3498db", 
+            hover_color="#2980b9", 
+            width=200,
+            height=45,
+            command=save_and_redirect
+        ).pack(pady=20)
 if __name__ == "__main__":
     app = NexusApp()
     app.mainloop()
