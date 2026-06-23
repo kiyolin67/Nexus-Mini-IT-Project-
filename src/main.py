@@ -375,7 +375,7 @@ class NexusApp(ctk.CTk):
         streak = 1 if today_mins > 0 else 0
         
         # Welcome Banner
-        ctk.CTkLabel(self.home_page, text="Welcome back, Scholar.", font=("Helvetica", 32, "bold")).pack(pady=(40, 10))
+        ctk.CTkLabel(self.home_page, text= f"Welcome back, {db.CURRENT_USER} or 'Schola.", font=("Helvetica", 32, "bold")).pack(pady=(40, 10))
         ctk.CTkLabel(self.home_page, text="Here is your study overview for this month.", font=("Helvetica", 16), text_color="gray").pack(pady=(0, 30))
 
         # Top Metrics Frame
@@ -416,14 +416,13 @@ class NexusApp(ctk.CTk):
         self.deadline_frame = ctk.CTkScrollableFrame(self.home_page, fg_color="transparent", height=150)
         self.deadline_frame.pack(pady=0, padx=50, fill="x")
 
-        # 1. Fetch real data from your Aiven database
+        # 1. Fetch real data
         real_deadlines = db.get_user_deadlines(db.CURRENT_USER)
 
         # 2. Handle the Empty State gracefully
         if not real_deadlines:
              ctk.CTkLabel(self.deadline_frame, text="No upcoming deadlines found in database. You're all caught up!", font=("Helvetica", 14), text_color="gray").pack(pady=30)
         else:
-            # 3. Dynamically build the UI from the database rows
             for row in real_deadlines:
                 task_name = row[0]
                 due_date = row[1]
@@ -561,7 +560,14 @@ class NexusApp(ctk.CTk):
             FocusTimerWindow(self, selected_subject, self.receive_timer_data)
 
     def receive_timer_data(self, subject, duration, confidence):
-        # save_focus_session(subject, duration, confidence) # HARDCODED
+        import database as db
+        db.save_focus_session(subject, duration, confidence, None)
+        self._save_to_memory_and_switch(
+            subject,
+            duration,
+            confidence,
+            None
+        )
 
         self._save_to_memory_and_switch(
             subject,
@@ -761,4 +767,5 @@ class NexusApp(ctk.CTk):
 if __name__ == "__main__":
     app = NexusApp()
     app.mainloop()
+
 
