@@ -7,11 +7,8 @@ import numpy as np
 # --- MODULE IMPORTS ---
 from timer import FocusTimerWindow
 import database as db
-# from heatmap_ui import ActivityHeatmap migth remove features
 from xp_dashboard import RPGDashboard
-# from database import save_focus_session, set_current_user hardcoded 
-
-# set_current_user("Lin") # HARDCODED FOR NOW, WILL IMPLEMENT PROPER LOGIN SYSTEM LATER
+from database import save_focus_session, set_current_user 
 
 # ==========================================
 # 1. CORE MATH & ALGORITHM ENGINE
@@ -578,8 +575,8 @@ class NexusApp(ctk.CTk):
         confidence = int(self.var_confidence.get())
         friction_tag = self.var_friction.get() if confidence <= 2 else None
         self._save_to_memory_and_switch(subject, duration, confidence, friction_tag)
-
-        # save_focus_session(subject, duration, confidence) # HARDCODED
+        import database as db
+        db.save_focus_session(subject, duration, confidence) 
 
     def _save_to_memory_and_switch(self, subject, duration, confidence, friction_tag=None):
         calculated_score = (confidence / 5.0) * 100

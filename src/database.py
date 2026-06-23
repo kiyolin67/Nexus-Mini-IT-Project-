@@ -90,46 +90,6 @@ def user_exists(user_id, password):
 ))
     return cursor.fetchone()
 
-def save_study_session(topic, duration, confidence, friction_tag):
-    global CURRENT_USER
-
-    if CURRENT_USER is None:
-        print("No logged in user.")
-        return
-    
-    today_date = datetime.now().date()
-
-    cursor.execute("""
-    INSERT INTO study_sessions (
-        user_id,
-        topic,
-        duration,
-        confidence,
-        friction_tag,
-        date_logged
-    )
-    VALUES (%s, %s, %s, %s, %s, %s)
-    """, (
-        CURRENT_USER,
-        topic,
-        duration,
-        confidence,
-        friction_tag,
-        today_date
-    ))
-
-    conn.commit()
-    print(f"Session Saved -> User: {CURRENT_USER}, Topic: {topic}, Duration: {duration}, Confidence: {confidence}, Friction Tag: {friction_tag}, Date: {today_date}")
-
-def get_user_sessions(user_id):
-    cursor.execute("""
-    SELECT *
-    FROM study_sessions
-    WHERE user_id = %s
-    ORDER BY date_logged ASC
-    """, (user_id,))
-
-    return cursor.fetchall()
 # ADMIN FUNCTIONS
 
 def is_admin(user_id, password):
@@ -191,7 +151,8 @@ def delete_user(user_id):
 def save_focus_session(
     subject_name,
     duration,
-    confidence
+    confidence,
+    friction_tag
 ):
 
     global CURRENT_USER
@@ -200,19 +161,25 @@ def save_focus_session(
         print("No logged in user.")
         return
 
+    today_date = datetime.now().date()
+
     cursor.execute("""
     INSERT INTO tracker3 (
         user_id,
         topic,
         duration,
-        weakness_level
+        confidence,
+        friction_tag,
+        date_logged
     )
     VALUES (%s, %s, %s, %s)
     """, (
         CURRENT_USER,
         subject_name,
         duration,
-        confidence
+        confidence,
+        friction_tag,
+        today_date
     ))
 
     conn.commit()
@@ -222,7 +189,8 @@ def save_focus_session(
         f"User: {CURRENT_USER}, "
         f"Subject: {subject_name}, "
         f"Duration: {duration}, "
-        f"Confidence: {confidence}"
+        f"Confidence: {confidence},"
+        f"Today's Date: {today_date},"
     )
 
 # DATA RETRIEVAL
@@ -266,7 +234,7 @@ def update_weakness(
 
     cursor.execute("""
     UPDATE tracker3
-    SET weakness_level = %s
+    SET confidence = %s
     WHERE id = %s
     """, (
         new_weakness,
@@ -291,6 +259,7 @@ def get_user_deadlines(username):
         query = "SELECT task_name, due_date, is_urgent FROM deadlines WHERE username = %s ORDER BY is_urgent DESC"         
         cursor.execute(query, (username,))
         results = cursor.fetchall()
+        return results
 
     except Exception as e:
         print(f"Error fetching deadlines: {e}")
@@ -328,6 +297,8 @@ CREATE TABLE IF NOT EXISTS deadlines (
 )
 """)
 conn.commit()
+
+
 # DATABASE CLEANUP
 
 def close_database():
