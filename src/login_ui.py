@@ -105,7 +105,40 @@ def show_register():
     )
     subtitle.pack(pady=(0, 15))
 
-    
+    # Input Fields with custom border styling
+    user_entry_reg = ctk.CTkEntry(
+        card_frame, 
+        placeholder_text="Choose Username", 
+        width=240,
+        height=35,
+        border_color="#434c5e",
+        fg_color="#3b4252"
+    )
+    user_entry_reg.pack(pady=8)
+
+    pass_entry_reg = ctk.CTkEntry(
+        card_frame, 
+        placeholder_text="Create Password", 
+        show="*", 
+        width=240,
+        height=35,
+        border_color="#434c5e",
+        fg_color="#3b4252"
+    )
+    pass_entry_reg.pack(pady=8)
+
+    confirm_entry = ctk.CTkEntry(
+        card_frame, 
+        placeholder_text="Confirm Password", 
+        show="*", 
+        width=240,
+        height=35,
+        border_color="#434c5e",
+        fg_color="#3b4252"
+    )
+    confirm_entry.pack(pady=8)
+
+
 def show_login():
     clear_window()
 
