@@ -84,21 +84,28 @@ def show_login():
 def show_register():
     clear_window()
 
-    title = ctk.CTkLabel(app, text="Register Account", font=("Helvetica", 20, "bold"), text_color="#5e81ac")
-    title.pack(pady=20)
+    # Main container frame (creates a nice "card" effect for the form)
+    card_frame = ctk.CTkFrame(app, fg_color="#2e3440", corner_radius=15)
+    card_frame.pack(pady=30, padx=30, fill="both", expand=True)
 
-    user_entry_reg = ctk.CTkEntry(app, placeholder_text="Username", width=200)
-    user_entry_reg.pack(pady=10)
+    # Header section
+    title = ctk.CTkLabel(
+        card_frame, 
+        text="Create Account", 
+        font=("Helvetica", 22, "bold"), 
+        text_color="#5e81ac" # Nordic Blue
+    )
+    title.pack(pady=(25, 5))
 
-    pass_entry_reg = ctk.CTkEntry(app, placeholder_text="Password", show="*", width=200)
-    pass_entry_reg.pack(pady=10)
+    subtitle = ctk.CTkLabel(
+        card_frame, 
+        text="Join the Nexus study portal", 
+        font=("Helvetica", 12), 
+        text_color="#8892b0" # Muted Slate
+    )
+    subtitle.pack(pady=(0, 15))
 
-    confirm_entry = ctk.CTkEntry(app, placeholder_text="Confirm Password", show="*", width=200)
-    confirm_entry.pack(pady=10)
-
-    status_label_reg = ctk.CTkLabel(app, text="")
-    status_label_reg.pack()
-
+    
 def show_login():
     clear_window()
 
