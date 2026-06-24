@@ -7,6 +7,12 @@ def clear_window():
     for widget in app.winfo_children():
         widget.destroy()
 
+# --- STUDY PALETTE THEME ---
+# Primary Accent (Slate/Nordic Blue): #5e81ac
+# Action Button (Calming Sage Green): #4f6f52
+# Action Hover (Darker Forest Sage):  #3a533c
+# Muted Text/Buttons (Soft Charcoal): #3b4252
+
 ctk.set_appearance_mode("dark") 
 ctk.set_default_color_theme("blue")
 
@@ -14,7 +20,7 @@ password_visible = False
 
 app = ctk.CTk()
 app.geometry("400x420") 
-app.title("Nexus - Secure Login")
+app.title("Nexus Study Portal - Secure Login")
 
 def toggle_password():
     global password_visible
@@ -33,18 +39,17 @@ def handle_login():
     password = pass_entry.get()
 
     if username == "" or password == "":
-        status_label.configure(text="Please fill all fields", text_color="red")
+        status_label.configure(text="Please fill all fields", text_color="#bf616a") # Soft red
     else:
         if db.is_admin(username, password):
             db.set_current_user("ADMIN")
             app.quit()
-
         elif db.user_exists(username, password):
             db.set_current_user(username)
-            status_label.configure(text="Login successful!", text_color="green")
+            status_label.configure(text="Login successful!", text_color="#a3be8c") # Soft green
             app.quit()
         else:
-            status_label.configure(text="Your provided credentials are invalid", text_color="red")
+            status_label.configure(text="Your provided credentials are invalid", text_color="#bf616a")
             pass_entry.delete(0, 'end')
 
 def show_login():
@@ -52,7 +57,8 @@ def show_login():
 
     global user_entry, pass_entry, status_label, toggle_button
 
-    title = ctk.CTkLabel(app, text="Nexus Portal", font=("Helvetica", 24, "bold"), text_color="#3498db")
+    # Updated Title Color to soft slate blue
+    title = ctk.CTkLabel(app, text="Nexus Portal", font=("Helvetica", 24, "bold"), text_color="#5e81ac")
     title.pack(pady=20)
 
     user_entry = ctk.CTkEntry(app, placeholder_text="Username", width=200)
@@ -61,22 +67,25 @@ def show_login():
     pass_entry = ctk.CTkEntry(app, placeholder_text="Password", show="*", width=200)
     pass_entry.pack(pady=10)
 
-    toggle_button = ctk.CTkButton(app, text="Show Password", width=150, fg_color="transparent", border_width=1, command=toggle_password)
+    # Secondary toggle button matching theme
+    toggle_button = ctk.CTkButton(app, text="Show Password", width=150, fg_color="transparent", border_width=1, border_color="#5e81ac", text_color="#5e81ac", command=toggle_password)
     toggle_button.pack(pady=5)
 
-    login_button = ctk.CTkButton(app, text="Login", width=200, fg_color="#2ecc71", hover_color="#27ae60", font=("Arial", 14, "bold"), command=handle_login)
+    # Login Button changed to Calming Sage Green
+    login_button = ctk.CTkButton(app, text="Login", width=200, fg_color="#4f6f52", hover_color="#3a533c", font=("Arial", 14, "bold"), command=handle_login)
     login_button.pack(pady=15)
 
     status_label = ctk.CTkLabel(app, text="")
     status_label.pack()
 
-    register_button = ctk.CTkButton(app, text="Create Account", fg_color="transparent", hover_color="#2c3e50", command=show_register)
+    # Muted hover for secondary register option
+    register_button = ctk.CTkButton(app, text="Create Account", fg_color="transparent", hover_color="#3b4252", text_color="#8892b0", command=show_register)
     register_button.pack(pady=10)
 
 def show_register():
     clear_window()
 
-    title = ctk.CTkLabel(app, text="Register", font=("Helvetica", 20, "bold"))
+    title = ctk.CTkLabel(app, text="Register Account", font=("Helvetica", 20, "bold"), text_color="#5e81ac")
     title.pack(pady=20)
 
     user_entry_reg = ctk.CTkEntry(app, placeholder_text="Username", width=200)
@@ -97,29 +106,31 @@ def show_register():
         c = confirm_entry.get()
 
         if u == "" or p == "" or c == "":
-            status_label_reg.configure(text="Fill all fields", text_color="red")
+            status_label_reg.configure(text="Fill all fields", text_color="#bf616a")
         elif p != c:
-            status_label_reg.configure(text="Passwords do not match", text_color="red")
+            status_label_reg.configure(text="Passwords do not match", text_color="#bf616a")
         else:
             success = db.save_user(u, p)
             if success:
-                status_label_reg.configure(text="Account created successfully", text_color="green")
+                status_label_reg.configure(text="Account created successfully", text_color="#a3be8c")
                 user_entry_reg.delete(0, 'end')
                 pass_entry_reg.delete(0, 'end')
                 confirm_entry.delete(0, 'end')
             else:
-                status_label_reg.configure(text="Username already exists", text_color="red")
+                status_label_reg.configure(text="Username already exists", text_color="#bf616a")
                 
-    register_btn = ctk.CTkButton(app, text="Register", width=200, command=register_user)
+    # Register buttons formatted to match focus theme
+    register_btn = ctk.CTkButton(app, text="Register", width=200, fg_color="#4f6f52", hover_color="#3a533c", font=("Arial", 14, "bold"), command=register_user)
     register_btn.pack(pady=10)
 
-    back_btn = ctk.CTkButton(app, text="Back to Login", fg_color="transparent", command=show_login)
+    back_btn = ctk.CTkButton(app, text="Back to Login", fg_color="transparent", hover_color="#3b4252", text_color="#8892b0", command=show_login)
     back_btn.pack(pady=5)
 
 show_login()
 app.mainloop()
 app.destroy()
 
+# Post-Login Handover
 if db.CURRENT_USER == "ADMIN":
     print("Welcome, Admin!")
     admin_dashboard = AdminDashboard()
@@ -128,4 +139,3 @@ elif db.CURRENT_USER is not None:
     print(f"Welcome, {db.CURRENT_USER}!")
     main_dashboard = NexusApp()
     main_dashboard.mainloop()
-    
