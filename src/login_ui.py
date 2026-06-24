@@ -172,3 +172,16 @@ def register_user():
 
     back_btn = ctk.CTkButton(app, text="Back to Login", fg_color="transparent", hover_color="#3b4252", text_color="#8892b0", command=show_login)
     back_btn.pack(pady=5)
+show_login()
+app.mainloop()
+app.destroy()
+
+# Post-Login Handover
+if db.CURRENT_USER == "ADMIN":
+    print("Welcome, Admin!")
+    admin_dashboard = AdminDashboard()
+    admin_dashboard.mainloop()
+elif db.CURRENT_USER is not None: 
+    print(f"Welcome, {db.CURRENT_USER}!")
+    main_dashboard = NexusApp()
+    main_dashboard.mainloop()
