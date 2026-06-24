@@ -138,6 +138,55 @@ def show_register():
     )
     confirm_entry.pack(pady=8)
 
+    # Contextual status/error label space
+    status_label_reg = ctk.CTkLabel(card_frame, text="", font=("Helvetica", 12))
+    status_label_reg.pack(pady=2)
+
+    # Core Register Logic (retaining original database hooks)
+    def register_user():
+        u = user_entry_reg.get()
+        p = pass_entry_reg.get()
+        c = confirm_entry.get()
+
+        if u == "" or p == "" or c == "":
+            status_label_reg.configure(text="Please fill all fields", text_color="#bf616a") # Soft red
+        elif p != c:
+            status_label_reg.configure(text="Passwords do not match", text_color="#bf616a")
+        else:
+            success = db.save_user(u, p)
+            if success:
+                status_label_reg.configure(text="Account created successfully!", text_color="#a3be8c") # Soft green
+                user_entry_reg.delete(0, 'end')
+                pass_entry_reg.delete(0, 'end')
+                confirm_entry.delete(0, 'end')
+            else:
+                status_label_reg.configure(text="Username already exists", text_color="#bf616a")
+                
+    # Primary Action Button (Sage Green)
+    register_btn = ctk.CTkButton(
+        card_frame, 
+        text="Register", 
+        width=240, 
+        height=40,
+        fg_color="#4f6f52", 
+        hover_color="#3a533c", 
+        font=("Helvetica", 14, "bold"), 
+        command=register_user
+    )
+    register_btn.pack(pady=(15, 5))
+
+    # Secondary Navigation Button
+    back_btn = ctk.CTkButton(
+        card_frame, 
+        text="← Back to Login", 
+        fg_color="transparent", 
+        hover_color="#3b4252", 
+        text_color="#8892b0", 
+        font=("Helvetica", 12),
+        command=show_login
+    )
+    back_btn.pack(pady=(0, 15))
+
 
 def show_login():
     clear_window()
