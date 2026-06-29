@@ -375,7 +375,7 @@ class NexusApp(ctk.CTk):
         streak = 1 if today_mins > 0 else 0
         
         # Welcome Banner
-        ctk.CTkLabel(self.home_page, text= f"Welcome back, {db.CURRENT_USER} or 'Schola.", font=("Helvetica", 32, "bold")).pack(pady=(40, 10))
+        ctk.CTkLabel(self.home_page, text= f"Welcome back, {db.CURRENT_USER}.", font=("Helvetica", 32, "bold")).pack(pady=(40, 10))
         ctk.CTkLabel(self.home_page, text="Here is your study overview for this month.", font=("Helvetica", 16), text_color="gray").pack(pady=(0, 30))
 
         # Top Metrics Frame
@@ -529,14 +529,14 @@ class NexusApp(ctk.CTk):
     
     def on_confidence_change(self, val):
         conf = int(val)
-        self.lab_conf_val.configure(text=f"Level {conf}")
+        self.label_conf_val.configure(text=f"Level {conf}")
         
         if conf <= 2:
             self.btn_save.pack_forget()
             self.friction_frame.pack(pady=10)
             self.btn_save.pack(pady=(20,10))
         else:
-            self.friciton_frame.pack_forget()
+            self.friction_frame.pack_forget()
 
     # --- CONTROLLER LOGIC FOR INPUT PAGE ---
     def update_trimesters(self, selected_program):
@@ -582,7 +582,7 @@ class NexusApp(ctk.CTk):
         friction_tag = self.var_friction.get() if confidence <= 2 else None
         self._save_to_memory_and_switch(subject, duration, confidence, friction_tag)
         import database as db
-        db.save_focus_session(subject, duration, confidence) 
+        db.save_focus_session(subject, duration, confidence, friction_tag) 
 
     def _save_to_memory_and_switch(self, subject, duration, confidence, friction_tag=None):
         calculated_score = (confidence / 5.0) * 100
