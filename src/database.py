@@ -285,6 +285,26 @@ def add_deadline(username, task_name, due_date, is_urgent):
     except Exception as e:
         print(f"Error adding deadline: {e}")
 
+def delete_subject(subject_name):
+    global CURRENT_USER
+    
+    if CURRENT_USER is None:
+        print("Error: No user logged in.")
+        return
+
+    try:
+        cursor.execute("""
+        DELETE FROM tracker3 
+        WHERE user_id = %s AND topic = %s
+        """, (CURRENT_USER, subject_name))
+        
+        conn.commit()
+        print(f"Successfully deleted all records for subject: {subject_name}")
+        
+    except Exception as e:
+        print(f"Error deleting subject: {e}")
+
+
 # REMINDER 
 
 cursor.execute("""

@@ -610,6 +610,21 @@ class NexusApp(ctk.CTk):
         self.analytics_dropdown.set(subject)
         self.refresh_analytics(subject)
 
+    def delete_current_subject(self):
+        import database as db
+        selected_subject = self.analytics_dropdown.get()
+
+        if selected_subject == "Welcome" or selected_subject not in self.subject_list:
+            return 
+        db.delete_subject(selected_subject)
+
+        self.sync_cloud_database()
+        self.analytics_dropdown.configure(values=self.subject_list)
+
+        next_subject = self.subject_list[0] if self.subject_list else "Welcome"
+        self.analytics_dropdown.set(next_subject)
+        self.refresh_analytics(next_subject)
+
 # ------------------------------------------
     # PAGE 3: ANALYTICS & INSIGHTS (UPGRADED)
     # ------------------------------------------
@@ -630,6 +645,17 @@ class NexusApp(ctk.CTk):
             command=self.refresh_analytics
         )
         self.analytics_dropdown.pack(side="left")
+
+        # 1(B). Delete Subject Button
+        self.btn_delete_subject = ctk.CTkButton(
+            self.filter_frame,
+            text="Delete Tracked Subject",
+            fg_color="#ef4444",
+            hover_color="#b91c1c",
+            font=("Helvetica", 14, "bold"),
+            command=self.delete_current_subject
+        )
+        self.btn_delete_subject.pack(side="right", padx=20)
 
         # 2. Big Mastery Score & Grade Display
         self.score_display_frame = ctk.CTkFrame(self.analytics_page, fg_color="#2b2b2b", corner_radius=10)
