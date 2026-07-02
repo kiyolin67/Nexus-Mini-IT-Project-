@@ -118,8 +118,10 @@ def show_register():
 
 show_login()
 app.mainloop()
-app.destroy()
-
+try:
+    app.destroy()
+except:
+    pass
 if db.CURRENT_USER == "ADMIN":
     print("Welcome, Admin!")
     admin_dashboard = AdminDashboard()

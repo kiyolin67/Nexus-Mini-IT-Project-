@@ -9,7 +9,7 @@ print("Connecting to database...")
 
 conn = mysql.connector.connect(
     host=os.getenv("DB_HOST"),
-    port=int(os.getenv("DB_PORT")),
+    port=int(os.getenv("DB_PORT", "20625")),
     user=os.getenv("DB_USER"),
     password=os.getenv("DB_PASS"),
     database="defaultdb",
@@ -172,7 +172,7 @@ def save_focus_session(
         friction_tag,
         date_logged
     )
-    VALUES (%s, %s, %s, %s)
+    VALUES (%s, %s, %s, %s, %s, %s)
     """, (
         CURRENT_USER,
         subject_name,

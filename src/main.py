@@ -585,6 +585,9 @@ class NexusApp(ctk.CTk):
         db.save_focus_session(subject, duration, confidence, friction_tag) 
 
     def _save_to_memory_and_switch(self, subject, duration, confidence, friction_tag=None):
+        if "Welcome" in self.mock_database:
+            del self.mock_database["Welcome"]
+        
         calculated_score = (confidence / 5.0) * 100
 
         if subject not in self.mock_database:
